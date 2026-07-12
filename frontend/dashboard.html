@@ -4,8 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>transiQ - Dashboard</title>
-
-<link rel="icon" type="image/png" href="assets/layout.png">
+<link rel="icon" type="image/png" href="assets/logo.png">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -265,25 +264,41 @@
   .fill-ontrip { background: #2563eb; }
   .fill-inshop { background: #d97706; }
   .fill-retired { background: #dc2626; }
+
+  .expiry-warn { color: #d97706; font-weight: 600; }
+  .expiry-danger { color: #dc2626; font-weight: 600; }
+  .expiry-ok { color: #16a34a; font-weight: 600; }
+
+  .cost-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f2f2f2;
+    font-size: 0.85rem;
+  }
+
+  .cost-row span:last-child { font-weight: 700; }
+
+  .alert-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f2f2f2;
+    font-size: 0.85rem;
+  }
+
+  .alert-item i { color: #d97706; }
 </style>
 </head>
 <body>
 
   <nav class="sidebar">
     <div class="sidebar-brand">
-      <img src="assets/logotq.png" alt="transiQ">
+      <img src="assets/logo.png" alt="transiQ">
       transiQ
     </div>
-    <ul class="nav-links">
-      <li class="active"><i class="fa-solid fa-gauge"></i> Dashboard</li>
-      <li><i class="fa-solid fa-van-shuttle"></i> Fleet</li>
-      <li><i class="fa-solid fa-id-card"></i> Drivers</li>
-      <li><i class="fa-solid fa-route"></i> Trips</li>
-      <li><i class="fa-solid fa-screwdriver-wrench"></i> Maintenance</li>
-      <li><i class="fa-solid fa-gas-pump"></i> Fuel & Expenses</li>
-      <li><i class="fa-solid fa-chart-line"></i> Analytics</li>
-      <li><i class="fa-solid fa-gear"></i> Settings</li>
-    </ul>
+    <ul class="nav-links" id="nav-links"></ul>
   </nav>
 
   <div class="main">
@@ -293,8 +308,8 @@
         <input type="text" placeholder="Search...">
       </div>
       <div class="user-block">
-        <span class="user-name">user</span>
-        <span class="role-badge">Dispatcher</span>
+        <span class="user-name" id="user-name">Raven K.</span>
+        <span class="role-badge" id="role-badge">Dispatcher</span>
       </div>
     </div>
 
@@ -307,135 +322,444 @@
 
       <div class="kpi-grid" id="kpi-grid"></div>
 
-      <div class="panels">
-        <div class="card-box">
-          <h3>Recent Trips</h3>
-          <table>
-            <thead>
-              <tr><th>Trip</th><th>Vehicle</th><th>Driver</th><th>Status</th><th>ETA</th></tr>
-            </thead>
-            <tbody id="trips-tbody"></tbody>
-          </table>
-        </div>
-
-        <div class="card-box">
-          <h3>Vehicle Status</h3>
-          <div id="vehicle-status"></div>
-        </div>
-      </div>
+      <div class="panels" id="panels"></div>
     </div>
   </div>
 
   <script>
     const BACKEND_URL = "http://127.0.0.1:5000";
 
-    const dummyKpis = [
-      { label: "Active Vehicles", value: 53, cls: "" },
-      { label: "Available Vehicles", value: 42, cls: "green" },
-      { label: "Vehicles in Maintenance", value: 5, cls: "orange" },
-      { label: "Active Trips", value: 18, cls: "blue" },
-      { label: "Pending Trips", value: 9, cls: "" },
-      { label: "Drivers on Duty", value: 26, cls: "" },
-      { label: "Fleet Utilization", value: "81%", cls: "green" },
-    ];
+    // ============================================================
+    // ROLE CONFIG — this is the core of the RBAC UI.
+    // Each role gets its own sidebar items, KPI set, and panels.
+    // ============================================================
+    const ROLE_CONFIG = {
+      "Fleet Manager": {
+        nav: [
+          { icon: "fa-gauge", label: "Dashboard", active: true },
+          { icon: "fa-van-shuttle", label: "Fleet" },
+          { icon: "fa-screwdriver-wrench", label: "Maintenance" },
+          { icon: "fa-gear", label: "Settings" },
+        ],
+        kpis: ["activeVehicles", "availableVehicles", "inMaintenance", "utilization"],
+        panels: ["vehicleStatus", "maintenanceAlerts"],
+      },
+      "Dispatcher": {
+        nav: [
+          { icon: "fa-gauge", label: "Dashboard", active: true },
+          { icon: "fa-route", label: "Trips" },
+          { icon: "fa-van-shuttle", label: "Fleet" },
+          { icon: "fa-gear", label: "Settings" },
+        ],
+        kpis: ["activeTrips", "pendingTrips", "availableVehicles", "driversOnDuty"],
+        panels: ["recentTrips", "vehicleStatus"],
+      },
+      "Safety Officer": {
+        nav: [
+          { icon: "fa-gauge", label: "Dashboard", active: true },
+          { icon: "fa-id-card", label: "Drivers" },
+          { icon: "fa-shield-halved", label: "Compliance" },
+          { icon: "fa-gear", label: "Settings" },
+        ],
+        kpis: ["driversOnDuty", "suspendedDrivers", "expiringLicenses", "avgSafetyScore"],
+        panels: ["licenseExpiry", "driverStatus"],
+      },
+      "Financial Analyst": {
+        nav: [
+          { icon: "fa-gauge", label: "Dashboard", active: true },
+          { icon: "fa-gas-pump", label: "Fuel & Expenses" },
+          { icon: "fa-chart-line", label: "Analytics" },
+          { icon: "fa-gear", label: "Settings" },
+        ],
+        kpis: ["operationalCost", "fuelCost", "maintenanceCost", "fleetUtilization"],
+        panels: ["costBreakdown", "topExpenseVehicles"],
+      },
+    };
+
+    const KPI_LABELS = {
+      activeVehicles: { label: "Active Vehicles", cls: "" },
+      availableVehicles: { label: "Available Vehicles", cls: "green" },
+      inMaintenance: { label: "Vehicles in Maintenance", cls: "orange" },
+      utilization: { label: "Fleet Utilization", cls: "green" },
+      activeTrips: { label: "Active Trips", cls: "blue" },
+      pendingTrips: { label: "Pending Trips", cls: "" },
+      driversOnDuty: { label: "Drivers on Duty", cls: "" },
+      suspendedDrivers: { label: "Suspended Drivers", cls: "orange" },
+      expiringLicenses: { label: "Licenses Expiring Soon", cls: "orange" },
+      avgSafetyScore: { label: "Avg Safety Score", cls: "green" },
+      operationalCost: { label: "Operational Cost", cls: "orange" },
+      fuelCost: { label: "Fuel Cost", cls: "" },
+      maintenanceCost: { label: "Maintenance Cost", cls: "" },
+      fleetUtilization: { label: "Fleet Utilization", cls: "green" },
+    };
+
+    // ============================================================
+    // DUMMY DATA — used whenever the backend isn't reachable
+    // ============================================================
+    const DUMMY = {
+      activeVehicles: 53, availableVehicles: 42, inMaintenance: 5, utilization: "81%",
+      activeTrips: 18, pendingTrips: 9, driversOnDuty: 26,
+      suspendedDrivers: 2, expiringLicenses: 4, avgSafetyScore: 87,
+      operationalCost: "₹1,84,200", fuelCost: "₹1,12,500", maintenanceCost: "₹71,700", fleetUtilization: "81%",
+    };
 
     const dummyTrips = [
       { id: "TR001", vehicle: "VAN-05", driver: "Alex", status: "OnTrip", label: "On Trip", eta: "45 min" },
       { id: "TR002", vehicle: "TRK-12", driver: "John", status: "Completed", label: "Completed", eta: "—" },
       { id: "TR003", vehicle: "MINI-08", driver: "Priya", status: "Dispatched", label: "Dispatched", eta: "1h 10m" },
-      { id: "TR004", vehicle: "—", driver: "—", status: "Draft", label: "Draft", eta: "Awaiting vehicle" },
     ];
 
-    function renderKpis(kpis) {
-      document.getElementById("kpi-grid").innerHTML = kpis.map(k => `
-        <div class="kpi-card ${k.cls}">
-          <div class="kpi-label">${k.label}</div>
-          <div class="kpi-value">${k.value}</div>
-        </div>
-      `).join("");
-    }
+    const dummyVehicleStatus = [
+      { label: "Available", pct: 65, cls: "fill-available" },
+      { label: "On Trip", pct: 30, cls: "fill-ontrip" },
+      { label: "In Shop", pct: 18, cls: "fill-inshop" },
+      { label: "Retired", pct: 5, cls: "fill-retired" },
+    ];
 
-    function renderTrips(trips) {
-      document.getElementById("trips-tbody").innerHTML = trips.map(t => `
-        <tr>
-          <td>${t.id}</td><td>${t.vehicle}</td><td>${t.driver}</td>
-          <td><span class="status-pill status-${t.status}">${t.label}</span></td>
-          <td>${t.eta}</td>
-        </tr>
-      `).join("");
-    }
+    const dummyMaintenanceAlerts = [
+      { vehicle: "Van-02", note: "Oil change overdue by 3 days" },
+      { vehicle: "Truck-07", note: "Scheduled service due tomorrow" },
+    ];
 
-    function renderVehicleStatus(rows) {
-      document.getElementById("vehicle-status").innerHTML = rows.map(v => `
-        <div class="vehicle-status-row">
-          <span>${v.label}</span>
-          <div class="bar-track"><div class="bar-fill ${v.cls}" style="width:${v.pct}%"></div></div>
-        </div>
-      `).join("");
-    }
+    const dummyLicenseExpiry = [
+      { name: "Priya Nair", expiry: "2026-07-20", status: "danger" },
+      { name: "Rohan Verma", expiry: "2026-08-15", status: "warn" },
+      { name: "Alex Sharma", expiry: "2027-05-01", status: "ok" },
+    ];
 
-    async function loadDashboard() {
+    const dummyDriverStatus = [
+      { label: "Available", pct: 55, cls: "fill-available" },
+      { label: "On Trip", pct: 30, cls: "fill-ontrip" },
+      { label: "Off Duty", pct: 10, cls: "fill-inshop" },
+      { label: "Suspended", pct: 5, cls: "fill-retired" },
+    ];
+
+    const dummyCostBreakdown = [
+      { label: "Fuel Cost", value: "₹1,12,500" },
+      { label: "Maintenance Cost", value: "₹71,700" },
+      { label: "Tolls & Misc", value: "₹8,400" },
+    ];
+
+    const dummyTopExpenseVehicles = [
+      { vehicle: "Truck-11", cost: "₹42,300" },
+      { vehicle: "Van-05", cost: "₹18,900" },
+      { vehicle: "Mini-08", cost: "₹11,200" },
+    ];
+
+    // ============================================================
+    // API HELPER
+    // ============================================================
+    async function apiGet(path) {
       const token = localStorage.getItem("token");
       const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch(`${BACKEND_URL}${path}`, { headers });
+      if (!res.ok) throw new Error(`${path} failed (${res.status})`);
+      return res.json();
+    }
+
+    function licenseStatus(expiryStr) {
+      const expiry = new Date(expiryStr);
+      const today = new Date();
+      const daysLeft = (expiry - today) / (1000 * 60 * 60 * 24);
+      if (daysLeft < 30) return "danger";
+      if (daysLeft < 120) return "warn";
+      return "ok";
+    }
+
+    // ============================================================
+    // ROLE-SPECIFIC DATA LOADERS — each returns { kpiValues, panelsHtml }
+    // Falls back to dummy data automatically if backend call fails.
+    // ============================================================
+    async function loadFleetManagerData() {
+      let kpiValues = {
+        activeVehicles: DUMMY.activeVehicles, availableVehicles: DUMMY.availableVehicles,
+        inMaintenance: DUMMY.inMaintenance, utilization: DUMMY.utilization,
+      };
+      let vehicleStatusRows = dummyVehicleStatus;
+      let maintenanceRows = dummyMaintenanceAlerts;
 
       try {
-        const res = await fetch(`${BACKEND_URL}/api/dashboard/kpis`, { headers });
-        if (!res.ok) throw new Error("KPI fetch failed");
-        const data = await res.json();
-
-        renderKpis([
-          { label: "Active Vehicles", value: data.activeVehicles, cls: "" },
-          { label: "Available Vehicles", value: data.availableVehicles, cls: "green" },
-          { label: "Vehicles in Maintenance", value: data.inMaintenance, cls: "orange" },
-          { label: "Active Trips", value: data.activeTrips, cls: "blue" },
-          { label: "Pending Trips", value: data.pendingTrips, cls: "" },
-          { label: "Drivers on Duty", value: data.driversOnDuty, cls: "" },
-          { label: "Fleet Utilization", value: data.utilization + "%", cls: "green" },
-        ]);
-      } catch (err) {
-        console.error("Backend not reachable, showing dummy KPIs:", err.message);
-        renderKpis(dummyKpis);
-      }
+        const kpis = await apiGet("/api/dashboard/kpis");
+        kpiValues = {
+          activeVehicles: kpis.activeVehicles, availableVehicles: kpis.availableVehicles,
+          inMaintenance: kpis.inMaintenance, utilization: kpis.utilization + "%",
+        };
+      } catch (e) { console.warn("Using dummy KPIs:", e.message); }
 
       try {
-        const res = await fetch(`${BACKEND_URL}/api/trips`, { headers });
-        if (!res.ok) throw new Error("Trips fetch failed");
-        const trips = await res.json();
-        renderTrips(trips.slice(0, 5).map(t => ({
-          id: "TR" + String(t.id).padStart(3, "0"),
-          vehicle: t.vehicleId, driver: t.driverId,
-          status: t.status.replace(/\s+/g, ""), label: t.status,
-          eta: t.status === "Dispatched" ? "In progress" : "—",
-        })));
-      } catch (err) {
-        console.error("Backend not reachable, showing dummy trips:", err.message);
-        renderTrips(dummyTrips);
-      }
-
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/vehicles`, { headers });
-        if (!res.ok) throw new Error("Vehicles fetch failed");
-        const vehicles = await res.json();
+        const vehicles = await apiGet("/api/vehicles");
         const total = vehicles.length || 1;
         const count = s => vehicles.filter(v => v.status === s).length;
-        renderVehicleStatus([
+        vehicleStatusRows = [
           { label: "Available", pct: Math.round((count("Available") / total) * 100), cls: "fill-available" },
           { label: "On Trip", pct: Math.round((count("On Trip") / total) * 100), cls: "fill-ontrip" },
           { label: "In Shop", pct: Math.round((count("In Shop") / total) * 100), cls: "fill-inshop" },
           { label: "Retired", pct: Math.round((count("Retired") / total) * 100), cls: "fill-retired" },
-        ]);
-      } catch (err) {
-        console.error("Backend not reachable, showing dummy vehicle status:", err.message);
-        renderVehicleStatus([
-          { label: "Available", pct: 65, cls: "fill-available" },
-          { label: "On Trip", pct: 30, cls: "fill-ontrip" },
-          { label: "In Shop", pct: 18, cls: "fill-inshop" },
-          { label: "Retired", pct: 5, cls: "fill-retired" },
-        ]);
-      }
+        ];
+      } catch (e) { console.warn("Using dummy vehicle status:", e.message); }
+
+      try {
+        const maint = await apiGet("/api/maintenance");
+        const active = maint.filter(m => m.status === "Active");
+        maintenanceRows = active.length
+          ? active.map(m => ({ vehicle: "Vehicle #" + m.vehicleId, note: `${m.type} — opened ${m.date}` }))
+          : [{ vehicle: "—", note: "No active maintenance records" }];
+      } catch (e) { console.warn("Using dummy maintenance alerts:", e.message); }
+
+      return {
+        kpiValues,
+        panelsHtml: renderVehicleStatusPanel(vehicleStatusRows) + renderMaintenanceAlertsPanel(maintenanceRows),
+      };
     }
 
-    loadDashboard();
+    async function loadDispatcherData() {
+      let kpiValues = {
+        activeTrips: DUMMY.activeTrips, pendingTrips: DUMMY.pendingTrips,
+        availableVehicles: DUMMY.availableVehicles, driversOnDuty: DUMMY.driversOnDuty,
+      };
+      let tripsRows = dummyTrips;
+      let vehicleStatusRows = dummyVehicleStatus;
+
+      try {
+        const kpis = await apiGet("/api/dashboard/kpis");
+        kpiValues = {
+          activeTrips: kpis.activeTrips, pendingTrips: kpis.pendingTrips,
+          availableVehicles: kpis.availableVehicles, driversOnDuty: kpis.driversOnDuty,
+        };
+      } catch (e) { console.warn("Using dummy KPIs:", e.message); }
+
+      try {
+        const trips = await apiGet("/api/trips");
+        tripsRows = trips.slice(-5).reverse().map(t => ({
+          id: "TR" + String(t.id).padStart(3, "0"),
+          vehicle: "V#" + t.vehicleId, driver: "D#" + t.driverId,
+          status: t.status.replace(/\s+/g, ""), label: t.status,
+          eta: t.status === "Dispatched" ? "In progress" : "—",
+        }));
+      } catch (e) { console.warn("Using dummy trips:", e.message); }
+
+      try {
+        const vehicles = await apiGet("/api/vehicles");
+        const total = vehicles.length || 1;
+        const count = s => vehicles.filter(v => v.status === s).length;
+        vehicleStatusRows = [
+          { label: "Available", pct: Math.round((count("Available") / total) * 100), cls: "fill-available" },
+          { label: "On Trip", pct: Math.round((count("On Trip") / total) * 100), cls: "fill-ontrip" },
+          { label: "In Shop", pct: Math.round((count("In Shop") / total) * 100), cls: "fill-inshop" },
+          { label: "Retired", pct: Math.round((count("Retired") / total) * 100), cls: "fill-retired" },
+        ];
+      } catch (e) { console.warn("Using dummy vehicle status:", e.message); }
+
+      return {
+        kpiValues,
+        panelsHtml: renderRecentTripsPanel(tripsRows) + renderVehicleStatusPanel(vehicleStatusRows),
+      };
+    }
+
+    async function loadSafetyOfficerData() {
+      let kpiValues = {
+        driversOnDuty: DUMMY.driversOnDuty, suspendedDrivers: DUMMY.suspendedDrivers,
+        expiringLicenses: DUMMY.expiringLicenses, avgSafetyScore: DUMMY.avgSafetyScore,
+      };
+      let licenseRows = dummyLicenseExpiry;
+      let driverStatusRows = dummyDriverStatus;
+
+      try {
+        const drivers = await apiGet("/api/drivers");
+        const total = drivers.length || 1;
+        const onDuty = drivers.filter(d => d.status === "On Trip").length;
+        const suspended = drivers.filter(d => d.status === "Suspended").length;
+        const expiring = drivers.filter(d => licenseStatus(d.licenseExpiry) !== "ok").length;
+        const avgScore = Math.round(drivers.reduce((s, d) => s + (d.safetyScore || 0), 0) / total);
+
+        kpiValues = {
+          driversOnDuty: onDuty, suspendedDrivers: suspended,
+          expiringLicenses: expiring, avgSafetyScore: avgScore,
+        };
+
+        licenseRows = [...drivers]
+          .sort((a, b) => new Date(a.licenseExpiry) - new Date(b.licenseExpiry))
+          .slice(0, 5)
+          .map(d => ({ name: d.name, expiry: d.licenseExpiry, status: licenseStatus(d.licenseExpiry) }));
+
+        const count = s => drivers.filter(d => d.status === s).length;
+        driverStatusRows = [
+          { label: "Available", pct: Math.round((count("Available") / total) * 100), cls: "fill-available" },
+          { label: "On Trip", pct: Math.round((count("On Trip") / total) * 100), cls: "fill-ontrip" },
+          { label: "Off Duty", pct: Math.round((count("Off Duty") / total) * 100), cls: "fill-inshop" },
+          { label: "Suspended", pct: Math.round((count("Suspended") / total) * 100), cls: "fill-retired" },
+        ];
+      } catch (e) { console.warn("Using dummy driver data:", e.message); }
+
+      return {
+        kpiValues,
+        panelsHtml: renderLicenseExpiryPanel(licenseRows) + renderDriverStatusPanel(driverStatusRows),
+      };
+    }
+
+    async function loadFinancialAnalystData() {
+      let kpiValues = {
+        operationalCost: DUMMY.operationalCost, fuelCost: DUMMY.fuelCost,
+        maintenanceCost: DUMMY.maintenanceCost, fleetUtilization: DUMMY.fleetUtilization,
+      };
+      let costRows = dummyCostBreakdown;
+      let topExpenseRows = dummyTopExpenseVehicles;
+
+      try {
+        const report = await apiGet("/api/reports");
+        const fuelTotal = report.perVehicle.reduce((s, v) => s + v.fuel, 0);
+        const maintTotal = report.perVehicle.reduce((s, v) => s + v.maint, 0);
+
+        kpiValues = {
+          operationalCost: "₹" + report.operationalCost,
+          fuelCost: "₹" + fuelTotal,
+          maintenanceCost: "₹" + maintTotal,
+          fleetUtilization: report.fleetUtilization + "%",
+        };
+
+        costRows = [
+          { label: "Fuel Cost", value: "₹" + fuelTotal },
+          { label: "Maintenance Cost", value: "₹" + maintTotal },
+        ];
+
+        topExpenseRows = [...report.perVehicle]
+          .sort((a, b) => b.total - a.total)
+          .slice(0, 5)
+          .map(v => ({ vehicle: v.name, cost: "₹" + v.total }));
+      } catch (e) { console.warn("Using dummy financial data:", e.message); }
+
+      return {
+        kpiValues,
+        panelsHtml: renderCostBreakdownPanel(costRows) + renderTopExpenseVehiclesPanel(topExpenseRows),
+      };
+    }
+
+    const ROLE_DATA_LOADERS = {
+      "Fleet Manager": loadFleetManagerData,
+      "Dispatcher": loadDispatcherData,
+      "Safety Officer": loadSafetyOfficerData,
+      "Financial Analyst": loadFinancialAnalystData,
+    };
+
+    // ============================================================
+    // PANEL HTML BUILDERS (take real or dummy rows, same either way)
+    // ============================================================
+    function renderRecentTripsPanel(rows) {
+      return `
+        <div class="card-box">
+          <h3>Recent Trips</h3>
+          <table>
+            <thead><tr><th>Trip</th><th>Vehicle</th><th>Driver</th><th>Status</th><th>ETA</th></tr></thead>
+            <tbody>${rows.map(t => `
+              <tr><td>${t.id}</td><td>${t.vehicle}</td><td>${t.driver}</td>
+              <td><span class="status-pill status-${t.status}">${t.label}</span></td><td>${t.eta}</td></tr>
+            `).join("")}</tbody>
+          </table>
+        </div>`;
+    }
+
+    function renderVehicleStatusPanel(rows) {
+      return `
+        <div class="card-box">
+          <h3>Vehicle Status</h3>
+          ${rows.map(v => `
+            <div class="vehicle-status-row">
+              <span>${v.label}</span>
+              <div class="bar-track"><div class="bar-fill ${v.cls}" style="width:${v.pct}%"></div></div>
+            </div>`).join("")}
+        </div>`;
+    }
+
+    function renderMaintenanceAlertsPanel(rows) {
+      return `
+        <div class="card-box">
+          <h3>Maintenance Alerts</h3>
+          ${rows.map(a => `
+            <div class="alert-item"><i class="fa-solid fa-triangle-exclamation"></i>
+              <span><strong>${a.vehicle}</strong> — ${a.note}</span></div>`).join("")}
+        </div>`;
+    }
+
+    function renderLicenseExpiryPanel(rows) {
+      return `
+        <div class="card-box">
+          <h3>License Expiry Tracker</h3>
+          <table>
+            <thead><tr><th>Driver</th><th>Expiry Date</th><th>Status</th></tr></thead>
+            <tbody>${rows.map(d => `
+              <tr><td>${d.name}</td><td>${d.expiry}</td>
+              <td class="expiry-${d.status}">${d.status === "danger" ? "Expiring soon" : d.status === "warn" ? "Renew soon" : "Valid"}</td></tr>
+            `).join("")}</tbody>
+          </table>
+        </div>`;
+    }
+
+    function renderDriverStatusPanel(rows) {
+      return `
+        <div class="card-box">
+          <h3>Driver Status</h3>
+          ${rows.map(v => `
+            <div class="vehicle-status-row">
+              <span>${v.label}</span>
+              <div class="bar-track"><div class="bar-fill ${v.cls}" style="width:${v.pct}%"></div></div>
+            </div>`).join("")}
+        </div>`;
+    }
+
+    function renderCostBreakdownPanel(rows) {
+      return `
+        <div class="card-box">
+          <h3>Cost Breakdown</h3>
+          ${rows.map(c => `<div class="cost-row"><span>${c.label}</span><span>${c.value}</span></div>`).join("")}
+        </div>`;
+    }
+
+    function renderTopExpenseVehiclesPanel(rows) {
+      return `
+        <div class="card-box">
+          <h3>Top Expense Vehicles</h3>
+          <table>
+            <thead><tr><th>Vehicle</th><th>Total Cost</th></tr></thead>
+            <tbody>${rows.map(v => `<tr><td>${v.vehicle}</td><td>${v.cost}</td></tr>`).join("")}</tbody>
+          </table>
+        </div>`;
+    }
+
+    // ============================================================
+    // MAIN RENDER — reads role from localStorage, loads real data
+    // ============================================================
+    async function renderDashboardForRole() {
+      const role = localStorage.getItem("role") || "Dispatcher";
+      const name = localStorage.getItem("name") || "Guest User";
+      const config = ROLE_CONFIG[role] || ROLE_CONFIG["Dispatcher"];
+
+      document.getElementById("user-name").textContent = name;
+      document.getElementById("role-badge").textContent = role;
+
+      document.getElementById("nav-links").innerHTML = config.nav.map(item => `
+        <li class="${item.active ? "active" : ""}"><i class="fa-solid ${item.icon}"></i> ${item.label}</li>
+      `).join("");
+
+      document.getElementById("kpi-grid").innerHTML = config.kpis.map(key => `
+        <div class="kpi-card ${KPI_LABELS[key].cls}">
+          <div class="kpi-label">${KPI_LABELS[key].label}</div>
+          <div class="kpi-value">Loading...</div>
+        </div>`).join("");
+      document.getElementById("panels").innerHTML = `<p style="color:#8a8d94;">Loading dashboard...</p>`;
+
+      const loader = ROLE_DATA_LOADERS[role] || ROLE_DATA_LOADERS["Dispatcher"];
+      const { kpiValues, panelsHtml } = await loader();
+
+      document.getElementById("kpi-grid").innerHTML = config.kpis.map(key => `
+        <div class="kpi-card ${KPI_LABELS[key].cls}">
+          <div class="kpi-label">${KPI_LABELS[key].label}</div>
+          <div class="kpi-value">${kpiValues[key]}</div>
+        </div>`).join("");
+
+      document.getElementById("panels").innerHTML = panelsHtml;
+    }
+
+    renderDashboardForRole();
   </script>
 
 </body>
