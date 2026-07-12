@@ -1,0 +1,60 @@
+DATABASE SCHEMA ARCHITECTURE
+
+CREATE TABLE roles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role_id INTEGER NOT NULL,
+    FOREIGN KEY (role_id) REFERENCES roles(id)
+);
+
+CREATE TABLE vehicles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    registration_number TEXT NOT NULL UNIQUE,
+    max_load_capacity REAL NOT NULL,
+    status TEXT DEFAULT 'Available'
+);
+
+CREATE TABLE drivers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    license_expiry_date DATE NOT NULL,
+    status TEXT DEFAULT 'Available'
+);
+
+CREATE TABLE trips (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vehicle_id INTEGER NOT NULL,
+    driver_id INTEGER NOT NULL,
+    cargo_weight REAL NOT NULL,
+    status TEXT DEFAULT 'Draft',
+    FOREIGN KEY (vehicle_id) REFERENCES vehicles(id),
+    FOREIGN KEY (driver_id) REFERENCES drivers(id)
+);
+
+CREATE TABLE maintenance_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vehicle_id INTEGER NOT NULL,
+    is_active BOOLEAN DEFAULT 1,
+    FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+);
+
+CREATE TABLE fuel_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vehicle_id INTEGER NOT NULL,
+    liters REAL NOT NULL,
+    cost REAL NOT NULL,
+    FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+);
+
+CREATE TABLE expenses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vehicle_id INTEGER NOT NULL,
+    amount REAL NOT NULL,
+    FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+);
