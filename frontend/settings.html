@@ -6,62 +6,89 @@
 <title>transiQ - Settings</title>
 <link rel="icon" type="image/png" href="assets/logotq.png">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/shared.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f5f7; color: #1a1a1a; display: flex; min-height: 100vh;
+  }
+  .sidebar { width: 220px; background: #14161a; color: #e5e7eb; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-brand {
+    display: flex; align-items: center; gap: 10px; padding: 22px 20px;
+    font-size: 1.05rem; font-weight: 700; color: #fff; border-bottom: 1px solid #24262c;
+  }
+  .sidebar-brand img { width: 26px; height: auto; }
+  .nav-links { list-style: none; padding: 12px 0; flex: 1; display: flex; flex-direction: column; }
+  .nav-links li {
+    display: flex; align-items: center; gap: 12px; padding: 11px 20px; font-size: 0.88rem;
+    color: #9a9da4; cursor: pointer; transition: background 0.15s, color 0.15s; user-select: none;
+  }
+  .nav-links li i { width: 16px; text-align: center; }
+  .nav-links li:hover { background: #1c1e24; color: #e5e7eb; }
+  .nav-links li.active { background: #7c5cff; color: #fff; }
+  .main { flex: 1; display: flex; flex-direction: column; }
+  .topbar {
+    background: #fff; padding: 14px 28px; display: flex; align-items: center;
+    justify-content: space-between; border-bottom: 1px solid #e5e7eb;
+  }
+  .user-block { display: flex; align-items: center; gap: 12px; }
+  .user-name { font-size: 0.85rem; color: #4a4d54; }
+  .role-badge { background: #7c5cff; color: #fff; font-size: 0.72rem; font-weight: 600; padding: 5px 10px; border-radius: 20px; }
+  .content { padding: 26px 28px; flex: 1; }
+  .page-header { margin-bottom: 20px; }
+  .page-header h1 { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+  .page-header p { font-size: 0.85rem; color: #6b6e75; }
+  .card-box {
+    background: #fff; border-radius: 10px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    color: #6b6e75; min-height: 260px;
+  }
+  .card-box i { font-size: 2.2rem; color: #7c5cff; margin-bottom: 16px; }
+  .card-box h3 { font-size: 1rem; color: #2a2a2a; margin-bottom: 8px; }
+  .card-box p { font-size: 0.85rem; max-width: 420px; }
+</style>
 </head>
 <body>
 
-<script src="backend/mapper.js"></script>
-<script>
-  if (mountShell("settings")) {
-    const role = currentRole();
-    const name = currentUserName();
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <img src="assets/logotq.png" alt="transiQ" onerror="this.style.display='none'">
+      transiQ
+    </div>
+    <ul class="nav-links" id="nav-links"></ul>
+  </nav>
 
-    const allPages = ["dashboard", "vehicles", "drivers", "trips", "maintenance", "expenses", "reports", "settings"];
-    const pageLabels = {
-      dashboard: "Dashboard", vehicles: "Fleet", drivers: "Drivers",
-      trips: "Trips", maintenance: "Maintenance", expenses: "Fuel & Expenses",
-      reports: "Analytics", settings: "Settings",
-    };
+  <div class="main">
+    <div class="topbar">
+      <div></div>
+      <div class="user-block">
+        <span class="user-name" id="user-name">—</span>
+        <span class="role-badge" id="role-badge">—</span>
+      </div>
+    </div>
 
-    document.getElementById("page-content").innerHTML = `
-      <div class="page-header"><h2>Settings & RBAC</h2></div>
-
-      <div class="card-box" style="max-width:420px;">
-        <h3>Account</h3>
-        <div class="field"><label>Name</label><input value="${name}" disabled></div>
-        <div class="field"><label>Role</label><input value="${role}" disabled></div>
-        <button class="btn btn-outline" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    <div class="content">
+      <div class="page-header">
+        <h1>Settings</h1>
+        <p>Account and system preferences.</p>
       </div>
 
       <div class="card-box">
-        <h3>Role-Based Access Control Matrix</h3>
-        <table class="rbac-matrix">
-          <thead>
-            <tr>
-              <th>Page</th>
-              ${ALL_ROLES.map(r => `<th>${r}</th>`).join("")}
-            </tr>
-          </thead>
-          <tbody>
-            ${allPages.map(p => `
-              <tr>
-                <td>${pageLabels[p]}</td>
-                ${ALL_ROLES.map(r => `
-                  <td>${pageAllowedForRole(p, r)
-                    ? '<i class="fa-solid fa-check rbac-check"></i>'
-                    : '<i class="fa-solid fa-xmark rbac-cross"></i>'}</td>
-                `).join("")}
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-        <p style="font-size:0.78rem; color:#8a8d94; margin-top:14px;">
-          Access is enforced both in the sidebar (hidden items) and on page load (direct URL access is blocked with an Access Restricted screen).
-        </p>
+        <i class="fa-solid fa-gear"></i>
+        <h3>Settings module</h3>
+        <p>This page is scaffolded and RBAC-protected — only roles with Settings in their sidebar can reach it. Wire it up to your Flask API (/api/settings) the same way dashboard.html pulls its data.</p>
       </div>
-    `;
-  }
-</script>
+    </div>
+  </div>
+
+  <script src="roles.js"></script>
+  <script>
+    const session = protectPage();
+    if (session) {
+      renderSidebar(session);
+      renderTopbar(session);
+    }
+  </script>
 
 </body>
 </html>

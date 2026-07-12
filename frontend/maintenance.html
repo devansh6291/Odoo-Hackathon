@@ -6,121 +6,89 @@
 <title>transiQ - Maintenance</title>
 <link rel="icon" type="image/png" href="assets/logotq.png">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/shared.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f5f7; color: #1a1a1a; display: flex; min-height: 100vh;
+  }
+  .sidebar { width: 220px; background: #14161a; color: #e5e7eb; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-brand {
+    display: flex; align-items: center; gap: 10px; padding: 22px 20px;
+    font-size: 1.05rem; font-weight: 700; color: #fff; border-bottom: 1px solid #24262c;
+  }
+  .sidebar-brand img { width: 26px; height: auto; }
+  .nav-links { list-style: none; padding: 12px 0; flex: 1; display: flex; flex-direction: column; }
+  .nav-links li {
+    display: flex; align-items: center; gap: 12px; padding: 11px 20px; font-size: 0.88rem;
+    color: #9a9da4; cursor: pointer; transition: background 0.15s, color 0.15s; user-select: none;
+  }
+  .nav-links li i { width: 16px; text-align: center; }
+  .nav-links li:hover { background: #1c1e24; color: #e5e7eb; }
+  .nav-links li.active { background: #7c5cff; color: #fff; }
+  .main { flex: 1; display: flex; flex-direction: column; }
+  .topbar {
+    background: #fff; padding: 14px 28px; display: flex; align-items: center;
+    justify-content: space-between; border-bottom: 1px solid #e5e7eb;
+  }
+  .user-block { display: flex; align-items: center; gap: 12px; }
+  .user-name { font-size: 0.85rem; color: #4a4d54; }
+  .role-badge { background: #7c5cff; color: #fff; font-size: 0.72rem; font-weight: 600; padding: 5px 10px; border-radius: 20px; }
+  .content { padding: 26px 28px; flex: 1; }
+  .page-header { margin-bottom: 20px; }
+  .page-header h1 { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+  .page-header p { font-size: 0.85rem; color: #6b6e75; }
+  .card-box {
+    background: #fff; border-radius: 10px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    color: #6b6e75; min-height: 260px;
+  }
+  .card-box i { font-size: 2.2rem; color: #7c5cff; margin-bottom: 16px; }
+  .card-box h3 { font-size: 1rem; color: #2a2a2a; margin-bottom: 8px; }
+  .card-box p { font-size: 0.85rem; max-width: 420px; }
+</style>
 </head>
 <body>
 
-<script src="backend/mapper.js"></script>
-<script>
-  if (mountShell("maintenance")) {
-    document.getElementById("page-content").innerHTML = `
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <img src="assets/logotq.png" alt="transiQ" onerror="this.style.display='none'">
+      transiQ
+    </div>
+    <ul class="nav-links" id="nav-links"></ul>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div></div>
+      <div class="user-block">
+        <span class="user-name" id="user-name">—</span>
+        <span class="role-badge" id="role-badge">—</span>
+      </div>
+    </div>
+
+    <div class="content">
       <div class="page-header">
-        <h2>Maintenance</h2>
-        <button class="btn btn-primary" onclick="openMaintModal()"><i class="fa-solid fa-plus"></i> Log Service Record</button>
+        <h1>Maintenance</h1>
+        <p>Scheduled and active maintenance records.</p>
       </div>
 
       <div class="card-box">
-        <table>
-          <thead><tr><th>Vehicle</th><th>Service Type</th><th>Date</th><th>Cost</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody id="maint-tbody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
-        </table>
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+        <h3>Maintenance module</h3>
+        <p>This page is scaffolded and RBAC-protected — only roles with Maintenance in their sidebar can reach it. Wire it up to your Flask API (/api/maintenance) the same way dashboard.html pulls its data.</p>
       </div>
-      <p style="font-size:0.78rem; color:#8a8d94; margin-top:8px;">
-        Adding a record auto-switches vehicle to "In Shop" (removed from dispatch pool). Closing it restores "Available".
-      </p>
-    `;
+    </div>
+  </div>
 
-    document.body.insertAdjacentHTML("beforeend", `
-      <div class="modal-overlay" id="maint-modal">
-        <div class="modal-box">
-          <h3>Log Service Record</h3>
-          <form id="maint-form">
-            <div class="field"><label>Vehicle</label><select name="vehicleId" id="maint-vehicle-select" required></select></div>
-            <div class="field"><label>Service Type</label><input name="type" placeholder="e.g. Oil Change" required></div>
-            <div class="field"><label>Date</label><input type="date" name="date" required></div>
-            <div class="field"><label>Cost</label><input type="number" name="cost" required></div>
-            <div id="maint-error" class="error-text"></div>
-            <div class="modal-actions">
-              <button type="button" class="btn btn-outline" onclick="closeMaintModal()">Cancel</button>
-              <button type="submit" class="btn btn-primary">Save Record</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    `);
-
-    document.getElementById("maint-form").addEventListener("submit", handleAddMaintenance);
-    loadMaintenance();
-  }
-
-  let allMaintenance = [], allVehicles = [];
-
-  const dummyMaintenance = [
-    { id: 1, vehicleId: 3, type: "Oil Change", date: "2026-07-10", cost: 2500, status: "Active" },
-    { id: 2, vehicleId: 2, type: "Tyre Replacement", date: "2026-07-05", cost: 6800, status: "Closed" },
-  ];
-  const dummyVehicles = [
-    { id: 1, name: "Van-05", status: "Available" },
-    { id: 2, name: "Truck-11", status: "On Trip" },
-    { id: 3, name: "Mini-08", status: "In Shop" },
-  ];
-
-  function vName(id) { return allVehicles.find(v => v.id === Number(id))?.name || "#" + id; }
-
-  async function loadMaintenance() {
-    try {
-      [allMaintenance, allVehicles] = await Promise.all([apiGet("/api/maintenance"), apiGet("/api/vehicles")]);
-    } catch (e) {
-      console.warn("Using dummy maintenance data:", e.message);
-      allMaintenance = dummyMaintenance; allVehicles = dummyVehicles;
+  <script src="roles.js"></script>
+  <script>
+    const session = protectPage();
+    if (session) {
+      renderSidebar(session);
+      renderTopbar(session);
     }
-
-    document.getElementById("maint-tbody").innerHTML = allMaintenance.length ? allMaintenance.map(m => `
-      <tr>
-        <td>${vName(m.vehicleId)}</td><td>${m.type}</td><td>${m.date}</td><td>₹${m.cost}</td>
-        <td><span class="status-pill status-${statusClass(m.status)}">${m.status}</span></td>
-        <td>${m.status === "Active" ? `<button class="btn btn-sm btn-success" onclick="closeMaintenance(${m.id})">Close</button>` : "—"}</td>
-      </tr>
-    `).join("") : `<tr><td colspan="6" class="empty-state">No maintenance records</td></tr>`;
-
-    document.getElementById("maint-vehicle-select").innerHTML = allVehicles
-      .filter(v => v.status !== "Retired")
-      .map(v => `<option value="${v.id}">${v.name}</option>`).join("");
-  }
-
-  function openMaintModal() {
-    document.getElementById("maint-error").textContent = "";
-    document.getElementById("maint-form").reset();
-    document.getElementById("maint-modal").classList.add("show");
-  }
-  function closeMaintModal() {
-    document.getElementById("maint-modal").classList.remove("show");
-  }
-
-  async function handleAddMaintenance(e) {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const record = Object.fromEntries(fd.entries());
-    record.cost = Number(record.cost);
-
-    try {
-      await apiSend("/api/maintenance", "POST", record);
-      showToast("Record added — vehicle moved to In Shop");
-      closeMaintModal();
-      loadMaintenance();
-    } catch (err) {
-      document.getElementById("maint-error").textContent = err.message;
-    }
-  }
-
-  async function closeMaintenance(id) {
-    try {
-      await apiSend(`/api/maintenance/${id}/close`, "PUT", {});
-      showToast("Maintenance closed — vehicle available again");
-      loadMaintenance();
-    } catch (err) { showToast(err.message, "error"); }
-  }
-</script>
+  </script>
 
 </body>
 </html>

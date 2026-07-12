@@ -22,54 +22,35 @@
     justify-content: center;
     padding: 80px;
     color: #1a1a1a;
+    position: relative;
   }
 
-  .brand-panel h1 {
-    font-size: 1.6rem;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
+  .brand-panel h1 { font-size: 1.6rem; font-weight: 600; margin-bottom: 4px; }
+  .brand-panel .tagline { font-size: 0.9rem; color: #6b6b6b; margin-bottom: 60px; }
 
-  .brand-panel .tagline {
-    font-size: 0.9rem;
-    color: #6b6b6b;
-    margin-bottom: 60px;
-  }
-
-  .roles-block h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin-bottom: 14px;
-  }
-
-  .roles-block ul {
-    list-style: none;
-  }
-
+  .roles-block h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 14px; }
+  .roles-block ul { list-style: none; }
   .roles-block li {
-    font-size: 0.9rem;
-    color: #3a3a3a;
-    padding: 6px 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    font-size: 0.9rem; color: #3a3a3a; padding: 6px 0;
+    display: flex; align-items: center; gap: 10px;
   }
-
   .roles-block li::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #6d0d80;
-    flex-shrink: 0;
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: #6d0d80; flex-shrink: 0;
   }
 
-  .brand-footer {
-    position: absolute;
-    bottom: 40px;
-    font-size: 0.75rem;
-    color: #9a9a9a;
+  .brand-footer { position: absolute; bottom: 40px; font-size: 0.75rem; color: #9a9a9a; }
+
+  .demo-creds {
+    margin-top: 40px;
+    font-size: 0.78rem;
+    color: #5a5a5a;
+    background: #dfdfdb;
+    border-radius: 8px;
+    padding: 14px 16px;
+    line-height: 1.7;
   }
+  .demo-creds strong { display: block; margin-bottom: 6px; color: #2a2a2a; }
 
   .auth-panel {
     flex: 1;
@@ -82,143 +63,65 @@
     position: relative;
   }
 
-  .auth-box {
-    width: 100%;
-    max-width: 360px;
-    color: #f2f2f2;
-  }
+  .auth-box { width: 100%; max-width: 360px; color: #f2f2f2; }
+  .auth-box h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 6px; }
+  .auth-box .sub { font-size: 0.85rem; color: #8a8d94; margin-bottom: 32px; }
 
-  .auth-box h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 6px;
-  }
-
-  .auth-box .sub {
-    font-size: 0.85rem;
-    color: #8a8d94;
-    margin-bottom: 32px;
-  }
-
-  .field {
-    margin-bottom: 18px;
-  }
-
+  .field { margin-bottom: 18px; }
   .field label {
-    display: block;
-    font-size: 0.78rem;
-    color: #b0b3ba;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    display: block; font-size: 0.78rem; color: #b0b3ba; margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.04em;
   }
-
-  .field input,
-  .field select {
-    width: 100%;
-    padding: 11px 14px;
-    background: #1e2126;
-    border: 1px solid #2c2f36;
-    border-radius: 8px;
-    color: #f2f2f2;
-    font-size: 0.9rem;
-    outline: none;
+  .field input, .field select {
+    width: 100%; padding: 11px 14px; background: #1e2126; border: 1px solid #2c2f36;
+    border-radius: 8px; color: #f2f2f2; font-size: 0.9rem; outline: none;
   }
-
-  .field input:focus,
-  .field select:focus {
-    border-color: #6d0d80;
-  }
-
-  .field input::placeholder {
-    color: #5c5f66;
-  }
+  .field input:focus, .field select:focus { border-color: #6d0d80; }
+  .field input::placeholder { color: #5c5f66; }
 
   .row-between {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 22px;
-    font-size: 0.82rem;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 22px; font-size: 0.82rem;
   }
-
-  .remember {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #b0b3ba;
-  }
-
-  .row-between a {
-    color: #9516cb;
-    text-decoration: none;
-  }
+  .remember { display: flex; align-items: center; gap: 8px; color: #b0b3ba; }
+  .row-between a { color: #9516cb; text-decoration: none; }
 
   .submit-btn {
-    width: 100%;
-    padding: 12px;
-    background: #6d0d80;
-    border: none;
-    border-radius: 8px;
-    color: #fff;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s;
+    width: 100%; padding: 12px; background: #6d0d80; border: none; border-radius: 8px;
+    color: #fff; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.15s;
   }
-
-  .submit-btn:hover {
-    background: #9516cb;
-  }
+  .submit-btn:hover { background: #9516cb; }
+  .submit-btn:disabled { background: #4a4d54; cursor: not-allowed; }
 
   .error-banner {
-    display: none;
-    margin-top: 16px;
-    padding: 12px 14px;
-    background: rgba(220, 38, 38, 0.1);
-    border: 1px solid rgba(220, 38, 38, 0.4);
-    border-radius: 8px;
-    color: #d190e3;
-    font-size: 0.8rem;
-    line-height: 1.5;
+    display: none; margin-top: 16px; padding: 12px 14px;
+    background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.4);
+    border-radius: 8px; color: #d190e3; font-size: 0.8rem; line-height: 1.5;
   }
+  .error-banner.show { display: block; }
 
-  .error-banner.show {
-    display: block;
+  .success-banner {
+    display: none; margin-top: 16px; padding: 12px 14px;
+    background: rgba(22, 163, 74, 0.12); border: 1px solid rgba(22, 163, 74, 0.4);
+    border-radius: 8px; color: #86efac; font-size: 0.8rem; line-height: 1.5;
   }
-.logo-mark {
-    width: 100px;
-    height: 100px;
-    margin-bottom: 3px;
-  }
+  .success-banner.show { display: block; }
+
+  .logo-mark { width: 100px; height: 100px; margin-bottom: 3px; }
+
   .access-note {
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid #2c2f36;
-    font-size: 0.78rem;
-    color: #6d7077;
-    line-height: 1.8;
+    margin-top: 24px; padding-top: 20px; border-top: 1px solid #2c2f36;
+    font-size: 0.78rem; color: #6d7077; line-height: 1.8;
   }
+  .access-note strong { color: #9a9da4; display: block; margin-bottom: 6px; }
 
-  .access-note strong {
-    color: #9a9da4;
-    display: block;
-    margin-bottom: 6px;
-  }
-
-  .auth-footer {
-    position: absolute;
-    bottom: 28px;
-    font-size: 0.72rem;
-    color: #4a4d54;
-    letter-spacing: 0.05em;
-  }
+  .auth-footer { position: absolute; bottom: 28px; font-size: 0.72rem; color: #4a4d54; letter-spacing: 0.05em; }
 </style>
 </head>
 <body>
 
   <div class="brand-panel">
-    <div class="logo-mark"> <img src="assets/logotq.png" alt="transiQ Logo" class="logo-mark"></div>
+    <div class="logo-mark"><img src="assets/logotq.png" alt="transiQ Logo" class="logo-mark" onerror="this.style.display='none'"></div>
     <h1>transiQ</h1>
     <p class="tagline">Smart Transport Operations Platform</p>
 
@@ -232,6 +135,14 @@
       </ul>
     </div>
 
+    <div class="demo-creds">
+      <strong>Demo accounts (password: password)</strong>
+      manager@transiq.com — Fleet Manager<br>
+      dispatch@transiq.com — Dispatcher<br>
+      safety@transiq.com — Safety Officer<br>
+      finance@transiq.com — Financial Analyst
+    </div>
+
     <div class="brand-footer">transiQ © 2026 · RBAC 2.0</div>
   </div>
 
@@ -243,7 +154,7 @@
       <form id="login-form">
         <div class="field">
           <label>Email</label>
-          <input type="email" id="email" placeholder="you@transiQ.io" required>
+          <input type="email" id="email" placeholder="you@transiq.com" required>
         </div>
 
         <div class="field">
@@ -269,11 +180,10 @@
           <a href="#">Forgot password?</a>
         </div>
 
-        <button type="submit" class="submit-btn">Sign In</button>
+        <button type="submit" class="submit-btn" id="submit-btn">Sign In</button>
 
-        <div class="error-banner" id="error-banner">
-          ✕ Invalid credentials.<br>Account locked after 5 failed attempts.
-        </div>
+        <div class="error-banner" id="error-banner"></div>
+        <div class="success-banner" id="success-banner">✓ Login successful. Redirecting...</div>
       </form>
 
       <div class="access-note">
@@ -288,21 +198,91 @@
 
   <div class="auth-footer">transiQ © 2026 · RBAC 2.0</div>
 
+  <script src="roles.js"></script>
   <script>
-    let attempts = 0;
-    document.getElementById("login-form").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const errorBanner = document.getElementById("error-banner");
+    // ------------------------------------------------------------
+    // BACKEND CONFIG — point this at your running Flask API
+    // ------------------------------------------------------------
+    const API_BASE_URL = "http://127.0.0.1:5000";
 
-      if (email === "manager@transiQ.com" && password === "password") {
-        errorBanner.classList.remove("show");
-        alert("Login successful");
-      } else {
-        attempts++;
-        errorBanner.classList.add("show");
+    const MAX_ATTEMPTS = 5;
+    let attempts = 0;
+
+    const form = document.getElementById("login-form");
+    const errorBanner = document.getElementById("error-banner");
+    const successBanner = document.getElementById("success-banner");
+    const submitBtn = document.getElementById("submit-btn");
+
+    // If already logged in, skip straight to the dashboard
+    if (getSession()) {
+      window.location.href = DASHBOARD_PAGE;
+    }
+
+    function showError(message) {
+      successBanner.classList.remove("show");
+      errorBanner.textContent = "✕ " + message;
+      errorBanner.classList.add("show");
+    }
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      if (attempts >= MAX_ATTEMPTS) {
+        showError("Account locked after 5 failed attempts. Please reset your password.");
+        return;
       }
+
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const password = document.getElementById("password").value;
+      const selectedRole = document.getElementById("role").value;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Signing in...";
+
+      let res, data;
+      try {
+        res = await fetch(`${API_BASE_URL}/api/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, role: selectedRole }),
+        });
+        data = await res.json();
+      } catch (networkErr) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Sign In";
+        showError("Couldn't reach the server. Is the backend running on " + API_BASE_URL + "?");
+        return;
+      }
+
+      if (!res.ok) {
+        attempts++;
+        submitBtn.disabled = attempts >= MAX_ATTEMPTS ? true : false;
+        submitBtn.textContent = "Sign In";
+
+        // Backend already tells us exactly what went wrong (bad creds, role
+        // mismatch, or account locked) — surface that message directly.
+        const remaining = data.attemptsRemaining;
+        showError(
+          remaining !== undefined && remaining > 0
+            ? `${data.error}. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`
+            : data.error || "Login failed."
+        );
+        return;
+      }
+
+      // Success — backend returned { token, email, name, role }
+      errorBanner.classList.remove("show");
+      successBanner.classList.add("show");
+
+      setSession({
+        role: data.role,
+        name: data.name,
+        token: data.token,
+      });
+
+      setTimeout(() => {
+        window.location.href = DASHBOARD_PAGE;
+      }, 500);
     });
   </script>
 
