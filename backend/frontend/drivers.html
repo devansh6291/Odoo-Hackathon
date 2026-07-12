@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>transiQ - Drivers</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+
+<script src="js/shared.js"></script>
+<script>
+  if (mountShell("drivers")) {
+    document.getElementById("page-content").innerHTML = `
+      <div class="page-header">
+        <h2>Drivers & Safety Profiles</h2>
+        <button class="btn btn-primary" onclick="openDriverModal()"><i class="fa-solid fa-plus"></i> Add Driver</button>
+      </div>
+
+      <div class="card-box">
+        <table>
+          <thead><tr>
+            <th>Driver</th><th>License No.</th><th>Category</th><th>Expiry</th><th>Contact</th><th>Safety Score</th><th>Status</th>
+          </tr></thead>
+          <tbody id="drivers-tbody"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+      <p style="font-size:0.78rem; color:#8a8d94; margin-top:8px;">
+        Rule: Expired license or Suspended status → blocked from trip assignment.
+      </p>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal-overlay" id="driver-modal">
+        <div class="modal-box">
+          <h3>Add Driver</h3>
+          <form id="driver-form">
+            <div class="field"><label>Name</label><input name="name" required></div>
+            <div class="field"><label>License Number (unique)</label><input name="licenseNumber" required></div>
+            <div class="field"><label>License Category</label>
+              <select name="licenseCategory"><option>LMV</option><option>HMV</option></select></div>
+            <div class="field"><label>License Expiry Date</label><input type="date" name="licenseExpiry" required></div>
+            <div class="field"><label>Contact Number</label><input name="contact" required></div>
+            <div id="driver-error" class="error-text"></div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-outline" onclick="closeDriverModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Driver</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `);
+
+    document.getElementById("driver-form").addEventListener("submit", handleAddDriver);
+    loadDrivers();
+  }
+
+  let allDrivers = [];
+
+  const dummyDrivers = [
+    { id: 1, name: "Alex Sharma", licenseNumber: "DL-1001", licenseCategory: "LMV", licenseExpiry: "2027-05-01", contact: "9876543210", safetyScore: 92, status: "Available" },
+    { id: 2, name: "John Mathew", licenseNumber: "DL-1002", licenseCategory: "HMV", licenseExpiry: "2026-08-15", contact: "9876543211", safetyScore: 85, status: "On Trip" },
+    { id: 3, name: "Priya Nair", licenseNumber: "DL-1003", licenseCategory: "LMV", licenseExpiry: "2026-07-20", contact: "9876543212", safetyScore: 78, status: "On Trip" },
+    { id: 4, name: "Sanjay Rao", licenseNumber: "DL-1004", licenseCategory: "LMV", licenseExpiry: "2025-01-01", contact: "9876543213", safetyScore: 60, status: "Suspended" },
+  ];
+
+  function daysUntil(dateStr) {
+    return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
+  }
+
+  async function loadDrivers() {
+    const tbody = document.getElementById("drivers-tbody");
+    try {
+      allDrivers = await apiGet("/api/drivers");
+    } catch (e) {
+      console.warn("Using dummy drivers:", e.message);
+      allDrivers = dummyDrivers;
+    }
+
+    tbody.innerHTML = allDrivers.length ? allDrivers.map(d => {
+      const days = daysUntil(d.licenseExpiry);
+      const expiryStyle = days < 30 ? "color:#dc2626; font-weight:600;" : days < 120 ? "color:#d97706; font-weight:600;" : "";
+      return `
+        <tr>
+          <td>${d.name}</td><td>${d.licenseNumber}</td><td>${d.licenseCategory}</td>
+          <td style="${expiryStyle}">${d.licenseExpiry}</td><td>${d.contact}</td>
+          <td>${d.safetyScore ?? "-"}</td>
+          <td><span class="status-pill status-${statusClass(d.status)}">${d.status}</span></td>
+        </tr>`;
+    }).join("") : `<tr><td colspan="7" class="empty-state">No drivers found</td></tr>`;
+  }
+
+  function openDriverModal() {
+    document.getElementById("driver-error").textContent = "";
+    document.getElementById("driver-form").reset();
+    document.getElementById("driver-modal").classList.add("show");
+  }
+
+  function closeDriverModal() {
+    document.getElementById("driver-modal").classList.remove("show");
+  }
+
+  async function handleAddDriver(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const driver = Object.fromEntries(fd.entries());
+
+    if (allDrivers.some(d => d.licenseNumber === driver.licenseNumber)) {
+      document.getElementById("driver-error").textContent = "License number must be unique";
+      return;
+    }
+
+    try {
+      await apiSend("/api/drivers", "POST", driver);
+      showToast("Driver added successfully");
+      closeDriverModal();
+      loadDrivers();
+    } catch (err) {
+      driver.id = allDrivers.length + 1;
+      driver.status = "Available";
+      driver.safetyScore = 100;
+      allDrivers.push(driver);
+      showToast("Driver added (offline mode)", "success");
+      closeDriverModal();
+      loadDrivers();
+    }
+  }
+</script>
+
+</body>
+</html>

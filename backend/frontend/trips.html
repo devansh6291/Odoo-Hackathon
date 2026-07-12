@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>transiQ - Trips</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+
+<script src="js/shared.js"></script>
+<script>
+  if (mountShell("trips")) {
+    document.getElementById("page-content").innerHTML = `
+      <div class="page-header">
+        <h2>Trip Dispatcher</h2>
+        <button class="btn btn-primary" onclick="openTripModal()"><i class="fa-solid fa-plus"></i> Create Trip</button>
+      </div>
+
+      <div class="card-box">
+        <h3>Live Board</h3>
+        <table>
+          <thead><tr>
+            <th>Trip</th><th>Route</th><th>Vehicle</th><th>Driver</th><th>Cargo</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="trips-tbody"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal-overlay" id="trip-modal">
+        <div class="modal-box">
+          <h3>Create Trip</h3>
+          <form id="trip-form">
+            <div class="field"><label>Source</label><input name="source" required></div>
+            <div class="field"><label>Destination</label><input name="destination" required></div>
+            <div class="field"><label>Vehicle (Available only)</label>
+              <select name="vehicleId" id="trip-vehicle-select" required></select></div>
+            <div class="field"><label>Driver (Available only)</label>
+              <select name="driverId" id="trip-driver-select" required></select></div>
+            <div class="field"><label>Cargo Weight (kg)</label><input type="number" name="cargoWeight" required></div>
+            <div class="field"><label>Planned Distance (km)</label><input type="number" name="distance" required></div>
+            <div id="trip-error" class="error-text"></div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-outline" onclick="closeTripModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary">Create (Draft)</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `);
+
+    document.getElementById("trip-form").addEventListener("submit", handleCreateTrip);
+    loadTrips();
+  }
+
+  let allTrips = [], allVehicles = [], allDrivers = [];
+
+  const dummyTrips = [
+    { id: 1, source: "Indore", destination: "Bhopal", vehicleId: 2, driverId: 2, cargoWeight: 1500, distance: 195, status: "Dispatched" },
+    { id: 2, source: "Ujjain", destination: "Dewas", vehicleId: 1, driverId: 1, cargoWeight: 300, distance: 55, status: "Completed" },
+  ];
+  const dummyVehicles = [
+    { id: 1, name: "Van-05", maxLoadCapacity: 500, status: "Available" },
+    { id: 2, name: "Truck-11", maxLoadCapacity: 2000, status: "On Trip" },
+    { id: 3, name: "Mini-08", maxLoadCapacity: 1000, status: "Available" },
+  ];
+  const dummyDrivers = [
+    { id: 1, name: "Alex Sharma", status: "Available", licenseExpiry: "2027-05-01" },
+    { id: 2, name: "John Mathew", status: "On Trip", licenseExpiry: "2026-08-15" },
+    { id: 3, name: "Priya Nair", status: "Available", licenseExpiry: "2026-07-20" },
+  ];
+
+  function vName(id) { return allVehicles.find(v => v.id === Number(id))?.name || "#" + id; }
+  function dName(id) { return allDrivers.find(d => d.id === Number(id))?.name || "#" + id; }
+
+  async function loadTrips() {
+    try {
+      [allTrips, allVehicles, allDrivers] = await Promise.all([
+        apiGet("/api/trips"), apiGet("/api/vehicles"), apiGet("/api/drivers"),
+      ]);
+    } catch (e) {
+      console.warn("Using dummy trip data:", e.message);
+      allTrips = dummyTrips; allVehicles = dummyVehicles; allDrivers = dummyDrivers;
+    }
+
+    const tbody = document.getElementById("trips-tbody");
+    tbody.innerHTML = allTrips.length ? allTrips.map(t => `
+      <tr>
+        <td>TR${String(t.id).padStart(3, "0")}</td>
+        <td>${t.source} → ${t.destination}</td>
+        <td>${vName(t.vehicleId)}</td><td>${dName(t.driverId)}</td>
+        <td>${t.cargoWeight} kg</td>
+        <td><span class="status-pill status-${statusClass(t.status)}">${t.status}</span></td>
+        <td>
+          ${t.status === "Draft" ? `<button class="btn btn-sm btn-success" onclick="dispatchTrip(${t.id})">Dispatch</button>` : ""}
+          ${t.status === "Dispatched" ? `
+            <button class="btn btn-sm btn-primary" onclick="completeTrip(${t.id})">Complete</button>
+            <button class="btn btn-sm btn-outline" onclick="cancelTrip(${t.id})">Cancel</button>` : ""}
+        </td>
+      </tr>
+    `).join("") : `<tr><td colspan="7" class="empty-state">No trips yet</td></tr>`;
+
+    const availableVehicles = allVehicles.filter(v => v.status === "Available");
+    const availableDrivers = allDrivers.filter(d => d.status === "Available");
+    document.getElementById("trip-vehicle-select").innerHTML =
+      `<option value="">Select vehicle</option>` +
+      availableVehicles.map(v => `<option value="${v.id}">${v.name} (max ${v.maxLoadCapacity}kg)</option>`).join("");
+    document.getElementById("trip-driver-select").innerHTML =
+      `<option value="">Select driver</option>` +
+      availableDrivers.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
+  }
+
+  function openTripModal() {
+    document.getElementById("trip-error").textContent = "";
+    document.getElementById("trip-form").reset();
+    document.getElementById("trip-modal").classList.add("show");
+  }
+  function closeTripModal() {
+    document.getElementById("trip-modal").classList.remove("show");
+  }
+
+  async function handleCreateTrip(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const trip = Object.fromEntries(fd.entries());
+    trip.cargoWeight = Number(trip.cargoWeight);
+    trip.distance = Number(trip.distance);
+
+    const vehicle = allVehicles.find(v => v.id === Number(trip.vehicleId));
+    const errorEl = document.getElementById("trip-error");
+    if (vehicle && trip.cargoWeight > vehicle.maxLoadCapacity) {
+      errorEl.textContent = `Cargo weight exceeds vehicle capacity (${vehicle.maxLoadCapacity}kg)`;
+      return;
+    }
+
+    try {
+      await apiSend("/api/trips", "POST", trip);
+      showToast("Trip created as Draft");
+      closeTripModal();
+      loadTrips();
+    } catch (err) {
+      errorEl.textContent = err.message;
+    }
+  }
+
+  async function dispatchTrip(id) {
+    try {
+      await apiSend(`/api/trips/${id}/dispatch`, "PUT", {});
+      showToast("Trip dispatched");
+      loadTrips();
+    } catch (err) { showToast(err.message, "error"); }
+  }
+
+  async function completeTrip(id) {
+    const odo = prompt("Final odometer reading:");
+    const fuel = prompt("Fuel consumed (liters):");
+    try {
+      await apiSend(`/api/trips/${id}/complete`, "PUT", { finalOdometer: Number(odo), fuelConsumed: Number(fuel) });
+      showToast("Trip completed");
+      loadTrips();
+    } catch (err) { showToast(err.message, "error"); }
+  }
+
+  async function cancelTrip(id) {
+    try {
+      await apiSend(`/api/trips/${id}/cancel`, "PUT", {});
+      showToast("Trip cancelled");
+      loadTrips();
+    } catch (err) { showToast(err.message, "error"); }
+  }
+</script>
+
+</body>
+</html>

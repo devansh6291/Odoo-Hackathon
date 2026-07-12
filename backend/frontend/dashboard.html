@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>transiQ - Dashboard</title>
-<link rel="icon" type="image/png" href="assets/logotq.png">
+<link rel="icon" type="image/png" href="assets/logo.png">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -295,7 +295,7 @@
 
   <nav class="sidebar">
     <div class="sidebar-brand">
-      <img src="assets/logotq.png" alt="transiQ">
+      <img src="assets/logo.png" alt="transiQ">
       transiQ
     </div>
     <ul class="nav-links" id="nav-links"></ul>
@@ -329,46 +329,43 @@
   <script>
     const BACKEND_URL = "http://127.0.0.1:5000";
 
-    // ============================================================
-    // ROLE CONFIG — Updated with 'href' for each page link
-    // ============================================================
     const ROLE_CONFIG = {
       "Fleet Manager": {
         nav: [
-          { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html", active: true },
-          { icon: "fa-van-shuttle", label: "Fleet", href: "vehicles.html" },
-          { icon: "fa-screwdriver-wrench", label: "Maintenance", href: "maintenance.html" },
-          { icon: "fa-gear", label: "Settings", href: "settings.html" },
+          { icon: "fa-gauge", label: "Dashboard", active: true },
+          { icon: "fa-van-shuttle", label: "Fleet" },
+          { icon: "fa-screwdriver-wrench", label: "Maintenance" },
+          { icon: "fa-gear", label: "Settings" },
         ],
         kpis: ["activeVehicles", "availableVehicles", "inMaintenance", "utilization"],
         panels: ["vehicleStatus", "maintenanceAlerts"],
       },
       "Dispatcher": {
         nav: [
-          { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html", active: true },
-          { icon: "fa-route", label: "Trips", href: "trips.html" },
-          { icon: "fa-van-shuttle", label: "Fleet", href: "vehicles.html" },
-          { icon: "fa-gear", label: "Settings", href: "settings.html" },
+          { icon: "fa-gauge", label: "Dashboard", active: true },
+          { icon: "fa-route", label: "Trips" },
+          { icon: "fa-van-shuttle", label: "Fleet" },
+          { icon: "fa-gear", label: "Settings" },
         ],
         kpis: ["activeTrips", "pendingTrips", "availableVehicles", "driversOnDuty"],
         panels: ["recentTrips", "vehicleStatus"],
       },
       "Safety Officer": {
         nav: [
-          { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html", active: true },
-          { icon: "fa-id-card", label: "Drivers", href: "drivers.html" },
-          { icon: "fa-shield-halved", label: "Compliance", href: "reports.html" },
-          { icon: "fa-gear", label: "Settings", href: "settings.html" },
+          { icon: "fa-gauge", label: "Dashboard", active: true },
+          { icon: "fa-id-card", label: "Drivers" },
+          { icon: "fa-shield-halved", label: "Compliance" },
+          { icon: "fa-gear", label: "Settings" },
         ],
         kpis: ["driversOnDuty", "suspendedDrivers", "expiringLicenses", "avgSafetyScore"],
         panels: ["licenseExpiry", "driverStatus"],
       },
       "Financial Analyst": {
         nav: [
-          { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html", active: true },
-          { icon: "fa-gas-pump", label: "Fuel & Expenses", href: "expenses.html" },
-          { icon: "fa-chart-line", label: "Analytics", href: "reports.html" },
-          { icon: "fa-gear", label: "Settings", href: "settings.html" },
+          { icon: "fa-gauge", label: "Dashboard", active: true },
+          { icon: "fa-gas-pump", label: "Fuel & Expenses" },
+          { icon: "fa-chart-line", label: "Analytics" },
+          { icon: "fa-gear", label: "Settings" },
         ],
         kpis: ["operationalCost", "fuelCost", "maintenanceCost", "fleetUtilization"],
         panels: ["costBreakdown", "topExpenseVehicles"],
@@ -392,9 +389,6 @@
       fleetUtilization: { label: "Fleet Utilization", cls: "green" },
     };
 
-    // ============================================================
-    // DUMMY DATA — used whenever the backend isn't reachable
-    // ============================================================
     const DUMMY = {
       activeVehicles: 53, availableVehicles: 42, inMaintenance: 5, utilization: "81%",
       activeTrips: 18, pendingTrips: 9, driversOnDuty: 26,
@@ -445,9 +439,6 @@
       { vehicle: "Mini-08", cost: "₹11,200" },
     ];
 
-    // ============================================================
-    // API HELPER
-    // ============================================================
     async function apiGet(path) {
       const token = localStorage.getItem("token");
       const headers = token ? { "Authorization": `Bearer ${token}` } : {};
@@ -465,9 +456,6 @@
       return "ok";
     }
 
-    // ============================================================
-    // ROLE-SPECIFIC DATA LOADERS
-    // ============================================================
     async function loadFleetManagerData() {
       let kpiValues = {
         activeVehicles: DUMMY.activeVehicles, availableVehicles: DUMMY.availableVehicles,
@@ -639,9 +627,6 @@
       "Financial Analyst": loadFinancialAnalystData,
     };
 
-    // ============================================================
-    // PANEL HTML BUILDERS 
-    // ============================================================
     function renderRecentTripsPanel(rows) {
       return `
         <div class="card-box">
@@ -723,22 +708,16 @@
         </div>`;
     }
 
-    // ============================================================
-    // MAIN RENDER — Updated with onclick for navigation routing
-    // ============================================================
     async function renderDashboardForRole() {
-      const role = localStorage.getItem("role") || "Dispatcher";
-      const name = localStorage.getItem("name") || "Guest User";
+      const role = "Dispatcher";
+      const name = "Dashboard User";
       const config = ROLE_CONFIG[role] || ROLE_CONFIG["Dispatcher"];
 
       document.getElementById("user-name").textContent = name;
       document.getElementById("role-badge").textContent = role;
 
-      // UPDATE: Added onclick attribute to route to the correct html file
       document.getElementById("nav-links").innerHTML = config.nav.map(item => `
-        <li class="${item.active ? "active" : ""}" onclick="window.location.href='${item.href}'">
-          <i class="fa-solid ${item.icon}"></i> ${item.label}
-        </li>
+        <li class="${item.active ? "active" : ""}"><i class="fa-solid ${item.icon}"></i> ${item.label}</li>
       `).join("");
 
       const loader = ROLE_DATA_LOADERS[role] || ROLE_DATA_LOADERS["Dispatcher"];

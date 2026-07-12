@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>transiQ - Sign In</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚚</text></svg>">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    height: 100vh;
+    display: flex;
+  }
+
+  .brand-panel {
+    flex: 1;
+    background: #e9e9e7;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px;
+    color: #1a1a1a;
+  }
+
+  .brand-panel h1 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .brand-panel .tagline {
+    font-size: 0.9rem;
+    color: #6b6b6b;
+    margin-bottom: 60px;
+  }
+
+  .roles-block h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  .roles-block ul {
+    list-style: none;
+  }
+
+  .roles-block li {
+    font-size: 0.9rem;
+    color: #3a3a3a;
+    padding: 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .roles-block li::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6d0d80;
+    flex-shrink: 0;
+  }
+
+  .brand-footer {
+    position: absolute;
+    bottom: 40px;
+    font-size: 0.75rem;
+    color: #9a9a9a;
+  }
+
+  .auth-panel {
+    flex: 1;
+    background: #14161a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    position: relative;
+  }
+
+  .auth-box {
+    width: 100%;
+    max-width: 360px;
+    color: #f2f2f2;
+  }
+
+  .auth-box h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .auth-box .sub {
+    font-size: 0.85rem;
+    color: #8a8d94;
+    margin-bottom: 32px;
+  }
+
+  .field {
+    margin-bottom: 18px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    color: #b0b3ba;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .field input,
+  .field select {
+    width: 100%;
+    padding: 11px 14px;
+    background: #1e2126;
+    border: 1px solid #2c2f36;
+    border-radius: 8px;
+    color: #f2f2f2;
+    font-size: 0.9rem;
+    outline: none;
+  }
+
+  .field input:focus,
+  .field select:focus {
+    border-color: #6d0d80;
+  }
+
+  .field input::placeholder {
+    color: #5c5f66;
+  }
+
+  .row-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+    font-size: 0.82rem;
+  }
+
+  .remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #b0b3ba;
+  }
+
+  .row-between a {
+    color: #9516cb;
+    text-decoration: none;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 12px;
+    background: #6d0d80;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .submit-btn:hover {
+    background: #9516cb;
+  }
+
+  .error-banner {
+    display: none;
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.4);
+    border-radius: 8px;
+    color: #d190e3;
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .error-banner.show {
+    display: block;
+  }
+.logo-mark {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 3px;
+  }
+  .access-note {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #2c2f36;
+    font-size: 0.78rem;
+    color: #6d7077;
+    line-height: 1.8;
+  }
+
+  .access-note strong {
+    color: #9a9da4;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .auth-footer {
+    position: absolute;
+    bottom: 28px;
+    font-size: 0.72rem;
+    color: #4a4d54;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+  <div class="brand-panel">
+    <div class="logo-mark"> <img src="assets/logotq.png" alt="transiQ Logo" class="logo-mark"></div>
+    <h1>transiQ</h1>
+    <p class="tagline">Smart Transport Operations Platform</p>
+
+    <div class="roles-block">
+      <h3>One login, Four roles</h3>
+      <ul>
+        <li>Fleet Manager</li>
+        <li>Dispatcher</li>
+        <li>Safety Officer</li>
+        <li>Financial Analyst</li>
+      </ul>
+    </div>
+
+    <div class="brand-footer">transiQ © 2026 · RBAC 2.0</div>
+  </div>
+
+  <div class="auth-panel">
+    <div class="auth-box">
+      <h2>Sign in to your account</h2>
+      <p class="sub">Enter your credentials to continue</p>
+
+      <form id="login-form">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="email" placeholder="you@transiQ.io" required>
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="••••••••" required>
+        </div>
+
+        <div class="field">
+          <label>Role (RBAC)</label>
+          <select id="role">
+            <option>Fleet Manager</option>
+            <option>Dispatcher</option>
+            <option>Safety Officer</option>
+            <option>Financial Analyst</option>
+          </select>
+        </div>
+
+        <div class="row-between">
+          <div class="remember">
+            <input type="checkbox" id="remember" checked>
+            <label for="remember">Remember me</label>
+          </div>
+          <a href="#">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="submit-btn">Sign In</button>
+
+        <div class="error-banner" id="error-banner">
+          ✕ Invalid credentials.<br>Account locked after 5 failed attempts.
+        </div>
+      </form>
+
+      <div class="access-note">
+        <strong>Access is scoped by role after login:</strong>
+        Fleet Manager → Fleet, Maintenance<br>
+        Dispatcher → Dispatch, Trips<br>
+        Safety Officer → Drivers, Compliance<br>
+        Financial Analyst → Fuel & Expenses, Analytics
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-footer">transiQ © 2026 · RBAC 2.0</div>
+
+  <script>
+    let attempts = 0;
+    document.getElementById("login-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const errorBanner = document.getElementById("error-banner");
+
+      if (email === "manager@transiQ.com" && password === "password") {
+        errorBanner.classList.remove("show");
+        alert("Login successful");
+      } else {
+        attempts++;
+        errorBanner.classList.add("show");
+      }
+    });
+  </script>
+
+</body>
+</html>

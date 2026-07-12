@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>transiQ - Maintenance</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+
+<script src="js/shared.js"></script>
+<script>
+  if (mountShell("maintenance")) {
+    document.getElementById("page-content").innerHTML = `
+      <div class="page-header">
+        <h2>Maintenance</h2>
+        <button class="btn btn-primary" onclick="openMaintModal()"><i class="fa-solid fa-plus"></i> Log Service Record</button>
+      </div>
+
+      <div class="card-box">
+        <table>
+          <thead><tr><th>Vehicle</th><th>Service Type</th><th>Date</th><th>Cost</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="maint-tbody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+      <p style="font-size:0.78rem; color:#8a8d94; margin-top:8px;">
+        Adding a record auto-switches vehicle to "In Shop" (removed from dispatch pool). Closing it restores "Available".
+      </p>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal-overlay" id="maint-modal">
+        <div class="modal-box">
+          <h3>Log Service Record</h3>
+          <form id="maint-form">
+            <div class="field"><label>Vehicle</label><select name="vehicleId" id="maint-vehicle-select" required></select></div>
+            <div class="field"><label>Service Type</label><input name="type" placeholder="e.g. Oil Change" required></div>
+            <div class="field"><label>Date</label><input type="date" name="date" required></div>
+            <div class="field"><label>Cost</label><input type="number" name="cost" required></div>
+            <div id="maint-error" class="error-text"></div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-outline" onclick="closeMaintModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Record</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `);
+
+    document.getElementById("maint-form").addEventListener("submit", handleAddMaintenance);
+    loadMaintenance();
+  }
+
+  let allMaintenance = [], allVehicles = [];
+
+  const dummyMaintenance = [
+    { id: 1, vehicleId: 3, type: "Oil Change", date: "2026-07-10", cost: 2500, status: "Active" },
+    { id: 2, vehicleId: 2, type: "Tyre Replacement", date: "2026-07-05", cost: 6800, status: "Closed" },
+  ];
+  const dummyVehicles = [
+    { id: 1, name: "Van-05", status: "Available" },
+    { id: 2, name: "Truck-11", status: "On Trip" },
+    { id: 3, name: "Mini-08", status: "In Shop" },
+  ];
+
+  function vName(id) { return allVehicles.find(v => v.id === Number(id))?.name || "#" + id; }
+
+  async function loadMaintenance() {
+    try {
+      [allMaintenance, allVehicles] = await Promise.all([apiGet("/api/maintenance"), apiGet("/api/vehicles")]);
+    } catch (e) {
+      console.warn("Using dummy maintenance data:", e.message);
+      allMaintenance = dummyMaintenance; allVehicles = dummyVehicles;
+    }
+
+    document.getElementById("maint-tbody").innerHTML = allMaintenance.length ? allMaintenance.map(m => `
+      <tr>
+        <td>${vName(m.vehicleId)}</td><td>${m.type}</td><td>${m.date}</td><td>₹${m.cost}</td>
+        <td><span class="status-pill status-${statusClass(m.status)}">${m.status}</span></td>
+        <td>${m.status === "Active" ? `<button class="btn btn-sm btn-success" onclick="closeMaintenance(${m.id})">Close</button>` : "—"}</td>
+      </tr>
+    `).join("") : `<tr><td colspan="6" class="empty-state">No maintenance records</td></tr>`;
+
+    document.getElementById("maint-vehicle-select").innerHTML = allVehicles
+      .filter(v => v.status !== "Retired")
+      .map(v => `<option value="${v.id}">${v.name}</option>`).join("");
+  }
+
+  function openMaintModal() {
+    document.getElementById("maint-error").textContent = "";
+    document.getElementById("maint-form").reset();
+    document.getElementById("maint-modal").classList.add("show");
+  }
+  function closeMaintModal() {
+    document.getElementById("maint-modal").classList.remove("show");
+  }
+
+  async function handleAddMaintenance(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const record = Object.fromEntries(fd.entries());
+    record.cost = Number(record.cost);
+
+    try {
+      await apiSend("/api/maintenance", "POST", record);
+      showToast("Record added — vehicle moved to In Shop");
+      closeMaintModal();
+      loadMaintenance();
+    } catch (err) {
+      document.getElementById("maint-error").textContent = err.message;
+    }
+  }
+
+  async function closeMaintenance(id) {
+    try {
+      await apiSend(`/api/maintenance/${id}/close`, "PUT", {});
+      showToast("Maintenance closed — vehicle available again");
+      loadMaintenance();
+    } catch (err) { showToast(err.message, "error"); }
+  }
+</script>
+
+</body>
+</html>
