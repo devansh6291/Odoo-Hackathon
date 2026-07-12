@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>transiQ - Reports</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<script src="js/shared.js"></script>
+<script>
+  if (mountShell("reports")) {
+    document.getElementById("page-content").innerHTML = `
+      <div class="page-header">
+        <h2>Reports & Analytics</h2>
+        <button class="btn btn-outline" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+      </div>
+      <div class="kpi-grid" id="report-kpis"></div>
+      <div class="card-box"><h3>Trip Compliant Vehicles — Cost per Vehicle</h3><canvas id="cost-chart" height="100"></canvas></div>
+    `;
+    loadReports();
+  }
+
+  let reportData = null;
+
+  const dummyReport = {
+    fuelEfficiency: 8.4, fleetUtilization: 81, operationalCost: 34070,
+    perVehicle: [
+      { name: "Van-05", fuel: 4200, maint: 0, total: 4200 },
+      { name: "Truck-11", fuel: 12800, maint: 6800, total: 19600 },
+      { name: "Mini-08", fuel: 0, maint: 2500, total: 2500 },
+    ],
+  };
+
+  async function loadReports() {
+    try {
+      reportData = await apiGet("/api/reports");
+    } catch (e) {
+      console.warn("Using dummy reports:", e.message);
+      reportData = dummyReport;
+    }
+
+    document.getElementById("report-kpis").innerHTML = `
+      <div class="kpi-card"><div class="kpi-label">Fuel Efficiency</div><div class="kpi-value">${reportData.fuelEfficiency} km/L</div></div>
+      <div class="kpi-card green"><div class="kpi-label">Fleet Utilization</div><div class="kpi-value">${reportData.fleetUtilization}%</div></div>
+      <div class="kpi-card orange"><div class="kpi-label">Operational Cost</div><div class="kpi-value">₹${reportData.operationalCost}</div></div>
+      <div class="kpi-card blue"><div class="kpi-label">Avg ROI</div><div class="kpi-value">14.2%</div></div>
+    `;
+
+    const ctx = document.getElementById("cost-chart");
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: reportData.perVehicle.map(v => v.name),
+        datasets: [
+          { label: "Fuel Cost", data: reportData.perVehicle.map(v => v.fuel), backgroundColor: "#7c5cff" },
+          { label: "Maintenance Cost", data: reportData.perVehicle.map(v => v.maint), backgroundColor: "#d97706" },
+        ],
+      },
+      options: { responsive: true, plugins: { legend: { position: "top" } } },
+    });
+  }
+
+  function exportCSV() {
+    if (!reportData) return;
+    const rows = [["Vehicle", "Fuel Cost", "Maintenance Cost", "Total"]];
+    reportData.perVehicle.forEach(v => rows.push([v.name, v.fuel, v.maint, v.total]));
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "transiq-report.csv";
+    link.click();
+  }
+</script>
+
+</body>
+</html>
