@@ -2,16 +2,17 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
 from datetime import datetime
+import os
 
 app = Flask(__name__)
-CORS(app)
+CORS(app) 
 
 def get_db_connection():
-    conn = sqlite3.connect('transitops.db')
+    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'transitops.db')
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
 
-# Make sure tables exist
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
@@ -44,6 +45,15 @@ def init_db():
 
 init_db()
 
+@app.route('/api/vehicles', methods=['GET'])
+def get_vehicles():
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("SELECT * FROM vehicles")
+    vehicles = c.fetchall()
+    conn.close()
+    return jsonify([dict(ix) for ix in vehicles]), 200
+
 @app.route('/api/vehicles', methods=['POST'])
 def create_vehicle():
     data = request.get_json()
@@ -62,6 +72,15 @@ def create_vehicle():
     finally:
         conn.close()
 
+@app.route('/api/drivers', methods=['GET'])
+def get_drivers():
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("SELECT * FROM drivers")
+    drivers = c.fetchall()
+    conn.close()
+    return jsonify([dict(ix) for ix in drivers]), 200
+
 @app.route('/api/drivers', methods=['POST'])
 def create_driver():
     data = request.get_json()
@@ -79,24 +98,6 @@ def create_driver():
         return jsonify({"error": str(e)}), 400
     finally:
         conn.close()
-
-@app.route('/api/vehicles', methods=['GET'])
-def get_vehicles():
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM vehicles")
-    vehicles = c.fetchall()
-    conn.close()
-    return jsonify([dict(ix) for ix in vehicles]), 200
-
-@app.route('/api/drivers', methods=['GET'])
-def get_drivers():
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM drivers")
-    drivers = c.fetchall()
-    conn.close()
-    return jsonify([dict(ix) for ix in drivers]), 200
 
 @app.route('/api/trips/<int:trip_id>/dispatch', methods=['POST'])
 def dispatch_trip(trip_id):
@@ -131,7 +132,7 @@ def complete_trip(trip_id):
         c.execute("SELECT vehicle_id, driver_id FROM trips WHERE id = ?", (trip_id,))
         trip = c.fetchone()
         
-        c.execute("UPDATE vehicles SET status = 'Available', odometer = ? WHERE id = ?", (data['final_odometer'], trip['vehicle_id']))
+        c.execute("UPDATE vehicles SET status = 'Available', odometer = ? WHERE id = ?", (data.get('final_odometer', 0), trip['vehicle_id']))
         c.execute("UPDATE drivers SET status = 'Available' WHERE id = ?", (trip['driver_id'],))
         
         conn.commit()
