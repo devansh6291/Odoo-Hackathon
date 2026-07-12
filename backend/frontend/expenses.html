@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>transiQ - Fuel & Expenses</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+
+<script src="js/shared.js"></script>
+<script>
+  if (mountShell("expenses")) {
+    document.getElementById("page-content").innerHTML = `
+      <div class="page-header">
+        <h2>Fuel & Expense Management</h2>
+        <div>
+          <button class="btn btn-outline" onclick="openFuelModal()"><i class="fa-solid fa-gas-pump"></i> Log Fuel</button>
+          <button class="btn btn-primary" onclick="openExpenseModal()"><i class="fa-solid fa-plus"></i> Add Expense</button>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h3>Fuel Logs</h3>
+        <table>
+          <thead><tr><th>Vehicle</th><th>Liters</th><th>Cost</th><th>Date</th></tr></thead>
+          <tbody id="fuel-tbody"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="card-box">
+        <h3>Other Expenses</h3>
+        <table>
+          <thead><tr><th>Vehicle</th><th>Type</th><th>Amount</th><th>Date</th></tr></thead>
+          <tbody id="expense-tbody"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="card-box">
+        <h3>Total Operational Cost (Fuel + Maintenance) per Vehicle</h3>
+        <table>
+          <thead><tr><th>Vehicle</th><th>Fuel</th><th>Maintenance</th><th>Total</th></tr></thead>
+          <tbody id="total-cost-tbody"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal-overlay" id="fuel-modal">
+        <div class="modal-box">
+          <h3>Log Fuel</h3>
+          <form id="fuel-form">
+            <div class="field"><label>Vehicle</label><select name="vehicleId" id="fuel-vehicle-select" required></select></div>
+            <div class="field"><label>Liters</label><input type="number" name="liters" required></div>
+            <div class="field"><label>Cost</label><input type="number" name="cost" required></div>
+            <div class="field"><label>Date</label><input type="date" name="date" required></div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-outline" onclick="closeFuelModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal-overlay" id="expense-modal">
+        <div class="modal-box">
+          <h3>Add Expense</h3>
+          <form id="expense-form">
+            <div class="field"><label>Vehicle</label><select name="vehicleId" id="expense-vehicle-select" required></select></div>
+            <div class="field"><label>Type</label><input name="type" placeholder="Toll, Parking, etc." required></div>
+            <div class="field"><label>Amount</label><input type="number" name="amount" required></div>
+            <div class="field"><label>Date</label><input type="date" name="date" required></div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-outline" onclick="closeExpenseModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `);
+
+    document.getElementById("fuel-form").addEventListener("submit", handleAddFuel);
+    document.getElementById("expense-form").addEventListener("submit", handleAddExpense);
+    loadExpensesPage();
+  }
+
+  let allVehicles = [], allFuelLogs = [], allExpenses = [], allMaintenance = [];
+
+  const dummyVehicles = [{ id: 1, name: "Van-05" }, { id: 2, name: "Truck-11" }, { id: 3, name: "Mini-08" }];
+  const dummyFuelLogs = [
+    { id: 1, vehicleId: 1, liters: 40, cost: 4200, date: "2026-07-08" },
+    { id: 2, vehicleId: 2, liters: 120, cost: 12800, date: "2026-07-09" },
+  ];
+  const dummyExpenses = [{ id: 1, vehicleId: 2, type: "Toll", amount: 850, date: "2026-07-09" }];
+  const dummyMaintenance = [{ id: 1, vehicleId: 3, cost: 2500 }];
+
+  function vName(id) { return allVehicles.find(v => v.id === Number(id))?.name || "#" + id; }
+
+  async function loadExpensesPage() {
+    try {
+      [allVehicles, allFuelLogs, allExpenses, allMaintenance] = await Promise.all([
+        apiGet("/api/vehicles"), apiGet("/api/fuel-logs"), apiGet("/api/expenses"), apiGet("/api/maintenance"),
+      ]);
+    } catch (e) {
+      console.warn("Using dummy expenses data:", e.message);
+      allVehicles = dummyVehicles; allFuelLogs = dummyFuelLogs;
+      allExpenses = dummyExpenses; allMaintenance = dummyMaintenance;
+    }
+
+    document.getElementById("fuel-tbody").innerHTML = allFuelLogs.length ? allFuelLogs.map(f => `
+      <tr><td>${vName(f.vehicleId)}</td><td>${f.liters} L</td><td>₹${f.cost}</td><td>${f.date}</td></tr>
+    `).join("") : `<tr><td colspan="4" class="empty-state">No fuel logs</td></tr>`;
+
+    document.getElementById("expense-tbody").innerHTML = allExpenses.length ? allExpenses.map(x => `
+      <tr><td>${vName(x.vehicleId)}</td><td>${x.type}</td><td>₹${x.amount}</td><td>${x.date}</td></tr>
+    `).join("") : `<tr><td colspan="4" class="empty-state">No expenses</td></tr>`;
+
+    document.getElementById("total-cost-tbody").innerHTML = allVehicles.map(v => {
+      const fuel = allFuelLogs.filter(f => f.vehicleId === v.id).reduce((s, f) => s + f.cost, 0);
+      const maint = allMaintenance.filter(m => m.vehicleId === v.id).reduce((s, m) => s + (m.cost || 0), 0);
+      return `<tr><td>${v.name}</td><td>₹${fuel}</td><td>₹${maint}</td><td><strong>₹${fuel + maint}</strong></td></tr>`;
+    }).join("");
+
+    const vehicleOptions = allVehicles.map(v => `<option value="${v.id}">${v.name}</option>`).join("");
+    document.getElementById("fuel-vehicle-select").innerHTML = vehicleOptions;
+    document.getElementById("expense-vehicle-select").innerHTML = vehicleOptions;
+  }
+
+  function openFuelModal() { document.getElementById("fuel-modal").classList.add("show"); }
+  function closeFuelModal() { document.getElementById("fuel-modal").classList.remove("show"); }
+  function openExpenseModal() { document.getElementById("expense-modal").classList.add("show"); }
+  function closeExpenseModal() { document.getElementById("expense-modal").classList.remove("show"); }
+
+  async function handleAddFuel(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const log = Object.fromEntries(fd.entries());
+    log.liters = Number(log.liters); log.cost = Number(log.cost);
+    try {
+      await apiSend("/api/fuel-logs", "POST", log);
+    } catch (err) {
+      log.id = allFuelLogs.length + 1;
+      allFuelLogs.push(log);
+    }
+    showToast("Fuel log added");
+    closeFuelModal();
+    loadExpensesPage();
+  }
+
+  async function handleAddExpense(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const exp = Object.fromEntries(fd.entries());
+    exp.amount = Number(exp.amount);
+    try {
+      await apiSend("/api/expenses", "POST", exp);
+    } catch (err) {
+      exp.id = allExpenses.length + 1;
+      allExpenses.push(exp);
+    }
+    showToast("Expense added");
+    closeExpenseModal();
+    loadExpensesPage();
+  }
+</script>
+
+</body>
+</html>

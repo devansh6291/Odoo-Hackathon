@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>transiQ - Settings</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+
+<script src="js/shared.js"></script>
+<script>
+  if (mountShell("settings")) {
+    const role = currentRole();
+    const name = currentUserName();
+
+    const allPages = ["dashboard", "vehicles", "drivers", "trips", "maintenance", "expenses", "reports", "settings"];
+    const pageLabels = {
+      dashboard: "Dashboard", vehicles: "Fleet", drivers: "Drivers",
+      trips: "Trips", maintenance: "Maintenance", expenses: "Fuel & Expenses",
+      reports: "Analytics", settings: "Settings",
+    };
+
+    document.getElementById("page-content").innerHTML = `
+      <div class="page-header"><h2>Settings & RBAC</h2></div>
+
+      <div class="card-box" style="max-width:420px;">
+        <h3>Account</h3>
+        <div class="field"><label>Name</label><input value="${name}" disabled></div>
+        <div class="field"><label>Role</label><input value="${role}" disabled></div>
+        <button class="btn btn-outline" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+      </div>
+
+      <div class="card-box">
+        <h3>Role-Based Access Control Matrix</h3>
+        <table class="rbac-matrix">
+          <thead>
+            <tr>
+              <th>Page</th>
+              ${ALL_ROLES.map(r => `<th>${r}</th>`).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${allPages.map(p => `
+              <tr>
+                <td>${pageLabels[p]}</td>
+                ${ALL_ROLES.map(r => `
+                  <td>${pageAllowedForRole(p, r)
+                    ? '<i class="fa-solid fa-check rbac-check"></i>'
+                    : '<i class="fa-solid fa-xmark rbac-cross"></i>'}</td>
+                `).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        <p style="font-size:0.78rem; color:#8a8d94; margin-top:14px;">
+          Access is enforced both in the sidebar (hidden items) and on page load (direct URL access is blocked with an Access Restricted screen).
+        </p>
+      </div>
+    `;
+  }
+</script>
+
+</body>
+</html>
