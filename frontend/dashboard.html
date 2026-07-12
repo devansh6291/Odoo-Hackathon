@@ -37,15 +37,14 @@
     border-bottom: 1px solid #24262c;
   }
 
-  .sidebar-brand img {
-    width: 26px;
-    height: auto;
-  }
+  .sidebar-brand img { width: 26px; height: auto; }
 
   .nav-links {
     list-style: none;
     padding: 12px 0;
     flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   .nav-links li {
@@ -57,25 +56,16 @@
     color: #9a9da4;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
+    user-select: none;
   }
 
   .nav-links li i { width: 16px; text-align: center; }
 
-  .nav-links li:hover {
-    background: #1c1e24;
-    color: #e5e7eb;
-  }
+  .nav-links li:hover { background: #1c1e24; color: #e5e7eb; }
 
-  .nav-links li.active {
-    background: #7c5cff;
-    color: #fff;
-  }
+  .nav-links li.active { background: #7c5cff; color: #fff; }
 
-  .main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
+  .main { flex: 1; display: flex; flex-direction: column; }
 
   .topbar {
     background: #fff;
@@ -97,53 +87,22 @@
     color: #8a8d94;
   }
 
-  .search-box input {
-    border: none;
-    background: transparent;
-    outline: none;
-    font-size: 0.85rem;
-    width: 100%;
-  }
+  .search-box input { border: none; background: transparent; outline: none; font-size: 0.85rem; width: 100%; }
 
-  .user-block {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .user-name {
-    font-size: 0.85rem;
-    color: #4a4d54;
-  }
+  .user-block { display: flex; align-items: center; gap: 12px; }
+  .user-name { font-size: 0.85rem; color: #4a4d54; }
 
   .role-badge {
-    background: #7c5cff;
-    color: #fff;
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 5px 10px;
-    border-radius: 20px;
+    background: #7c5cff; color: #fff; font-size: 0.72rem; font-weight: 600;
+    padding: 5px 10px; border-radius: 20px;
   }
 
-  .content {
-    padding: 26px 28px;
-    flex: 1;
-  }
+  .content { padding: 26px 28px; flex: 1; }
 
-  .filters {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
+  .filters { display: flex; gap: 12px; margin-bottom: 20px; }
   .filters select {
-    padding: 8px 14px;
-    border: 1px solid #e0e1e5;
-    border-radius: 8px;
-    background: #fff;
-    font-size: 0.82rem;
-    color: #4a4d54;
-    outline: none;
+    padding: 8px 14px; border: 1px solid #e0e1e5; border-radius: 8px; background: #fff;
+    font-size: 0.82rem; color: #4a4d54; outline: none;
   }
 
   .kpi-grid {
@@ -154,112 +113,39 @@
   }
 
   .kpi-card {
-    background: #fff;
-    border-radius: 10px;
-    padding: 14px 16px;
-    border-left: 4px solid #7c5cff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    background: #fff; border-radius: 10px; padding: 14px 16px;
+    border-left: 4px solid #7c5cff; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   }
-
   .kpi-card.green { border-left-color: #16a34a; }
   .kpi-card.orange { border-left-color: #d97706; }
   .kpi-card.blue { border-left-color: #2563eb; }
 
-  .kpi-label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    color: #8a8d94;
-    letter-spacing: 0.04em;
-    margin-bottom: 6px;
-  }
+  .kpi-label { font-size: 0.7rem; text-transform: uppercase; color: #8a8d94; letter-spacing: 0.04em; margin-bottom: 6px; }
+  .kpi-value { font-size: 1.5rem; font-weight: 700; }
 
-  .kpi-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-  }
+  .panels { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; }
 
-  .panels {
-    display: grid;
-    grid-template-columns: 1.6fr 1fr;
-    gap: 20px;
-  }
+  .card-box { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .card-box h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6b6e75; margin-bottom: 16px; }
 
-  .card-box {
-    background: #fff;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
-
-  .card-box h3 {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #6b6e75;
-    margin-bottom: 16px;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
+  table { width: 100%; border-collapse: collapse; }
   table th {
-    text-align: left;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    color: #8a8d94;
-    padding: 8px 10px;
-    border-bottom: 1px solid #eee;
+    text-align: left; font-size: 0.72rem; text-transform: uppercase; color: #8a8d94;
+    padding: 8px 10px; border-bottom: 1px solid #eee;
   }
+  table td { padding: 10px; font-size: 0.85rem; border-bottom: 1px solid #f2f2f2; }
 
-  table td {
-    padding: 10px;
-    font-size: 0.85rem;
-    border-bottom: 1px solid #f2f2f2;
-  }
-
-  .status-pill {
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #fff;
-    display: inline-block;
-  }
-
+  .status-pill { padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; color: #fff; display: inline-block; }
   .status-OnTrip { background: #2563eb; }
   .status-Completed { background: #16a34a; }
   .status-Dispatched { background: #7c5cff; }
   .status-Draft { background: #9ca3af; }
 
-  .vehicle-status-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
-    font-size: 0.82rem;
-    color: #4a4d54;
-  }
+  .vehicle-status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 0.82rem; color: #4a4d54; }
+  .vehicle-status-row span:first-child { width: 80px; flex-shrink: 0; }
 
-  .vehicle-status-row span:first-child {
-    width: 80px;
-    flex-shrink: 0;
-  }
-
-  .bar-track {
-    flex: 1;
-    height: 8px;
-    background: #f0f0f2;
-    border-radius: 6px;
-    overflow: hidden;
-  }
-
-  .bar-fill {
-    height: 100%;
-    border-radius: 6px;
-  }
-
+  .bar-track { flex: 1; height: 8px; background: #f0f0f2; border-radius: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; }
   .fill-available { background: #16a34a; }
   .fill-ontrip { background: #2563eb; }
   .fill-inshop { background: #d97706; }
@@ -269,25 +155,10 @@
   .expiry-danger { color: #dc2626; font-weight: 600; }
   .expiry-ok { color: #16a34a; font-weight: 600; }
 
-  .cost-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #f2f2f2;
-    font-size: 0.85rem;
-  }
-
+  .cost-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f2f2f2; font-size: 0.85rem; }
   .cost-row span:last-child { font-weight: 700; }
 
-  .alert-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 0;
-    border-bottom: 1px solid #f2f2f2;
-    font-size: 0.85rem;
-  }
-
+  .alert-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f2f2f2; font-size: 0.85rem; }
   .alert-item i { color: #d97706; }
 </style>
 </head>
@@ -295,7 +166,7 @@
 
   <nav class="sidebar">
     <div class="sidebar-brand">
-      <img src="assets/logotq.png" alt="transiQ">
+      <img src="assets/logotq.png" alt="transiQ" onerror="this.style.display='none'">
       transiQ
     </div>
     <ul class="nav-links" id="nav-links"></ul>
@@ -308,8 +179,8 @@
         <input type="text" placeholder="Search...">
       </div>
       <div class="user-block">
-        <span class="user-name" id="user-name">Raven K.</span>
-        <span class="role-badge" id="role-badge">Dispatcher</span>
+        <span class="user-name" id="user-name">—</span>
+        <span class="role-badge" id="role-badge">—</span>
       </div>
     </div>
 
@@ -321,59 +192,13 @@
       </div>
 
       <div class="kpi-grid" id="kpi-grid"></div>
-
       <div class="panels" id="panels"></div>
     </div>
   </div>
 
+  <script src="roles.js"></script>
   <script>
     const BACKEND_URL = "http://127.0.0.1:5000";
-
-    // ============================================================
-    // ROLE CONFIG — Updated with 'href' for each page link
-    // ============================================================
-    const ROLE_CONFIG = {
-      "Fleet Manager": {
-        nav: [
-          { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html", active: true },
-          { icon: "fa-van-shuttle", label: "Fleet", href: "vehicles.html" },
-          { icon: "fa-screwdriver-wrench", label: "Maintenance", href: "maintenance.html" },
-          { icon: "fa-gear", label: "Settings", href: "settings.html" },
-        ],
-        kpis: ["activeVehicles", "availableVehicles", "inMaintenance", "utilization"],
-        panels: ["vehicleStatus", "maintenanceAlerts"],
-      },
-      "Dispatcher": {
-        nav: [
-          { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html", active: true },
-          { icon: "fa-route", label: "Trips", href: "trips.html" },
-          { icon: "fa-van-shuttle", label: "Fleet", href: "vehicles.html" },
-          { icon: "fa-gear", label: "Settings", href: "settings.html" },
-        ],
-        kpis: ["activeTrips", "pendingTrips", "availableVehicles", "driversOnDuty"],
-        panels: ["recentTrips", "vehicleStatus"],
-      },
-      "Safety Officer": {
-        nav: [
-          { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html", active: true },
-          { icon: "fa-id-card", label: "Drivers", href: "drivers.html" },
-          { icon: "fa-shield-halved", label: "Compliance", href: "reports.html" },
-          { icon: "fa-gear", label: "Settings", href: "settings.html" },
-        ],
-        kpis: ["driversOnDuty", "suspendedDrivers", "expiringLicenses", "avgSafetyScore"],
-        panels: ["licenseExpiry", "driverStatus"],
-      },
-      "Financial Analyst": {
-        nav: [
-          { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html", active: true },
-          { icon: "fa-gas-pump", label: "Fuel & Expenses", href: "expenses.html" },
-          { icon: "fa-chart-line", label: "Analytics", href: "reports.html" },
-          { icon: "fa-gear", label: "Settings", href: "settings.html" },
-        ],
-        kpis: ["operationalCost", "fuelCost", "maintenanceCost", "fleetUtilization"],
-        panels: ["costBreakdown", "topExpenseVehicles"],
-      },
-    };
 
     const KPI_LABELS = {
       activeVehicles: { label: "Active Vehicles", cls: "" },
@@ -392,9 +217,6 @@
       fleetUtilization: { label: "Fleet Utilization", cls: "green" },
     };
 
-    // ============================================================
-    // DUMMY DATA — used whenever the backend isn't reachable
-    // ============================================================
     const DUMMY = {
       activeVehicles: 53, availableVehicles: 42, inMaintenance: 5, utilization: "81%",
       activeTrips: 18, pendingTrips: 9, driversOnDuty: 26,
@@ -445,9 +267,6 @@
       { vehicle: "Mini-08", cost: "₹11,200" },
     ];
 
-    // ============================================================
-    // API HELPER
-    // ============================================================
     async function apiGet(path) {
       const token = localStorage.getItem("token");
       const headers = token ? { "Authorization": `Bearer ${token}` } : {};
@@ -465,9 +284,6 @@
       return "ok";
     }
 
-    // ============================================================
-    // ROLE-SPECIFIC DATA LOADERS
-    // ============================================================
     async function loadFleetManagerData() {
       let kpiValues = {
         activeVehicles: DUMMY.activeVehicles, availableVehicles: DUMMY.availableVehicles,
@@ -639,9 +455,6 @@
       "Financial Analyst": loadFinancialAnalystData,
     };
 
-    // ============================================================
-    // PANEL HTML BUILDERS 
-    // ============================================================
     function renderRecentTripsPanel(rows) {
       return `
         <div class="card-box">
@@ -723,26 +536,19 @@
         </div>`;
     }
 
-    // ============================================================
-    // MAIN RENDER — Updated with onclick for navigation routing
-    // ============================================================
-    async function renderDashboardForRole() {
-      const role = localStorage.getItem("role") || "Dispatcher";
-      const name = localStorage.getItem("name") || "Guest User";
-      const config = ROLE_CONFIG[role] || ROLE_CONFIG["Dispatcher"];
+    // ------------------------------------------------------------
+    // MAIN RENDER
+    // ------------------------------------------------------------
+    async function renderDashboard() {
+      const session = protectPage();      // roles.js: redirects to login if not authed
+      if (!session) return;
 
-      document.getElementById("user-name").textContent = name;
-      document.getElementById("role-badge").textContent = role;
+      renderSidebar(session);
+      renderTopbar(session);
 
-      // UPDATE: Added onclick attribute to route to the correct html file
-      document.getElementById("nav-links").innerHTML = config.nav.map(item => `
-        <li class="${item.active ? "active" : ""}" onclick="window.location.href='${item.href}'">
-          <i class="fa-solid ${item.icon}"></i> ${item.label}
-        </li>
-      `).join("");
-
-      const loader = ROLE_DATA_LOADERS[role] || ROLE_DATA_LOADERS["Dispatcher"];
+      const loader = ROLE_DATA_LOADERS[session.role] || ROLE_DATA_LOADERS["Dispatcher"];
       const { kpiValues, panelsHtml } = await loader();
+      const config = ROLE_CONFIG[session.role];
 
       document.getElementById("kpi-grid").innerHTML = config.kpis.map(key => `
         <div class="kpi-card ${KPI_LABELS[key].cls}">
@@ -752,9 +558,8 @@
 
       document.getElementById("panels").innerHTML = panelsHtml;
     }
-   
 
-    renderDashboardForRole();
+    renderDashboard();
   </script>
 
 </body>

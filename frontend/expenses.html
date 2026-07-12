@@ -5,166 +5,90 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>transiQ - Fuel & Expenses</title>
 <link rel="icon" type="image/png" href="assets/logotq.png">
-<script src="backend/mapper.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/shared.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f5f7; color: #1a1a1a; display: flex; min-height: 100vh;
+  }
+  .sidebar { width: 220px; background: #14161a; color: #e5e7eb; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-brand {
+    display: flex; align-items: center; gap: 10px; padding: 22px 20px;
+    font-size: 1.05rem; font-weight: 700; color: #fff; border-bottom: 1px solid #24262c;
+  }
+  .sidebar-brand img { width: 26px; height: auto; }
+  .nav-links { list-style: none; padding: 12px 0; flex: 1; display: flex; flex-direction: column; }
+  .nav-links li {
+    display: flex; align-items: center; gap: 12px; padding: 11px 20px; font-size: 0.88rem;
+    color: #9a9da4; cursor: pointer; transition: background 0.15s, color 0.15s; user-select: none;
+  }
+  .nav-links li i { width: 16px; text-align: center; }
+  .nav-links li:hover { background: #1c1e24; color: #e5e7eb; }
+  .nav-links li.active { background: #7c5cff; color: #fff; }
+  .main { flex: 1; display: flex; flex-direction: column; }
+  .topbar {
+    background: #fff; padding: 14px 28px; display: flex; align-items: center;
+    justify-content: space-between; border-bottom: 1px solid #e5e7eb;
+  }
+  .user-block { display: flex; align-items: center; gap: 12px; }
+  .user-name { font-size: 0.85rem; color: #4a4d54; }
+  .role-badge { background: #7c5cff; color: #fff; font-size: 0.72rem; font-weight: 600; padding: 5px 10px; border-radius: 20px; }
+  .content { padding: 26px 28px; flex: 1; }
+  .page-header { margin-bottom: 20px; }
+  .page-header h1 { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+  .page-header p { font-size: 0.85rem; color: #6b6e75; }
+  .card-box {
+    background: #fff; border-radius: 10px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    color: #6b6e75; min-height: 260px;
+  }
+  .card-box i { font-size: 2.2rem; color: #7c5cff; margin-bottom: 16px; }
+  .card-box h3 { font-size: 1rem; color: #2a2a2a; margin-bottom: 8px; }
+  .card-box p { font-size: 0.85rem; max-width: 420px; }
+</style>
 </head>
 <body>
 
-<script src="backend/mapper.js"></script>
-<script>
-  if (mountShell("expenses")) {
-    document.getElementById("page-content").innerHTML = `
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <img src="assets/logotq.png" alt="transiQ" onerror="this.style.display='none'">
+      transiQ
+    </div>
+    <ul class="nav-links" id="nav-links"></ul>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div></div>
+      <div class="user-block">
+        <span class="user-name" id="user-name">—</span>
+        <span class="role-badge" id="role-badge">—</span>
+      </div>
+    </div>
+
+    <div class="content">
       <div class="page-header">
-        <h2>Fuel & Expense Management</h2>
-        <div>
-          <button class="btn btn-outline" onclick="openFuelModal()"><i class="fa-solid fa-gas-pump"></i> Log Fuel</button>
-          <button class="btn btn-primary" onclick="openExpenseModal()"><i class="fa-solid fa-plus"></i> Add Expense</button>
-        </div>
+        <h1>Fuel & Expenses</h1>
+        <p>Fuel spend and expense tracking.</p>
       </div>
 
       <div class="card-box">
-        <h3>Fuel Logs</h3>
-        <table>
-          <thead><tr><th>Vehicle</th><th>Liters</th><th>Cost</th><th>Date</th></tr></thead>
-          <tbody id="fuel-tbody"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody>
-        </table>
+        <i class="fa-solid fa-gas-pump"></i>
+        <h3>Fuel & Expenses module</h3>
+        <p>This page is scaffolded and RBAC-protected — only roles with Fuel & Expenses in their sidebar can reach it. Wire it up to your Flask API (/api/expenses) the same way dashboard.html pulls its data.</p>
       </div>
+    </div>
+  </div>
 
-      <div class="card-box">
-        <h3>Other Expenses</h3>
-        <table>
-          <thead><tr><th>Vehicle</th><th>Type</th><th>Amount</th><th>Date</th></tr></thead>
-          <tbody id="expense-tbody"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody>
-        </table>
-      </div>
-
-      <div class="card-box">
-        <h3>Total Operational Cost (Fuel + Maintenance) per Vehicle</h3>
-        <table>
-          <thead><tr><th>Vehicle</th><th>Fuel</th><th>Maintenance</th><th>Total</th></tr></thead>
-          <tbody id="total-cost-tbody"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody>
-        </table>
-      </div>
-    `;
-
-    document.body.insertAdjacentHTML("beforeend", `
-      <div class="modal-overlay" id="fuel-modal">
-        <div class="modal-box">
-          <h3>Log Fuel</h3>
-          <form id="fuel-form">
-            <div class="field"><label>Vehicle</label><select name="vehicleId" id="fuel-vehicle-select" required></select></div>
-            <div class="field"><label>Liters</label><input type="number" name="liters" required></div>
-            <div class="field"><label>Cost</label><input type="number" name="cost" required></div>
-            <div class="field"><label>Date</label><input type="date" name="date" required></div>
-            <div class="modal-actions">
-              <button type="button" class="btn btn-outline" onclick="closeFuelModal()">Cancel</button>
-              <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-          </form>
-        </div>
-      </div>
-      <div class="modal-overlay" id="expense-modal">
-        <div class="modal-box">
-          <h3>Add Expense</h3>
-          <form id="expense-form">
-            <div class="field"><label>Vehicle</label><select name="vehicleId" id="expense-vehicle-select" required></select></div>
-            <div class="field"><label>Type</label><input name="type" placeholder="Toll, Parking, etc." required></div>
-            <div class="field"><label>Amount</label><input type="number" name="amount" required></div>
-            <div class="field"><label>Date</label><input type="date" name="date" required></div>
-            <div class="modal-actions">
-              <button type="button" class="btn btn-outline" onclick="closeExpenseModal()">Cancel</button>
-              <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    `);
-
-    document.getElementById("fuel-form").addEventListener("submit", handleAddFuel);
-    document.getElementById("expense-form").addEventListener("submit", handleAddExpense);
-    loadExpensesPage();
-  }
-
-  let allVehicles = [], allFuelLogs = [], allExpenses = [], allMaintenance = [];
-
-  const dummyVehicles = [{ id: 1, name: "Van-05" }, { id: 2, name: "Truck-11" }, { id: 3, name: "Mini-08" }];
-  const dummyFuelLogs = [
-    { id: 1, vehicleId: 1, liters: 40, cost: 4200, date: "2026-07-08" },
-    { id: 2, vehicleId: 2, liters: 120, cost: 12800, date: "2026-07-09" },
-  ];
-  const dummyExpenses = [{ id: 1, vehicleId: 2, type: "Toll", amount: 850, date: "2026-07-09" }];
-  const dummyMaintenance = [{ id: 1, vehicleId: 3, cost: 2500 }];
-
-  function vName(id) { return allVehicles.find(v => v.id === Number(id))?.name || "#" + id; }
-
-  async function loadExpensesPage() {
-    try {
-      [allVehicles, allFuelLogs, allExpenses, allMaintenance] = await Promise.all([
-        apiGet("/api/vehicles"), apiGet("/api/fuel-logs"), apiGet("/api/expenses"), apiGet("/api/maintenance"),
-      ]);
-    } catch (e) {
-      console.warn("Using dummy expenses data:", e.message);
-      allVehicles = dummyVehicles; allFuelLogs = dummyFuelLogs;
-      allExpenses = dummyExpenses; allMaintenance = dummyMaintenance;
+  <script src="roles.js"></script>
+  <script>
+    const session = protectPage();
+    if (session) {
+      renderSidebar(session);
+      renderTopbar(session);
     }
-
-    document.getElementById("fuel-tbody").innerHTML = allFuelLogs.length ? allFuelLogs.map(f => `
-      <tr><td>${vName(f.vehicleId)}</td><td>${f.liters} L</td><td>₹${f.cost}</td><td>${f.date}</td></tr>
-    `).join("") : `<tr><td colspan="4" class="empty-state">No fuel logs</td></tr>`;
-
-    document.getElementById("expense-tbody").innerHTML = allExpenses.length ? allExpenses.map(x => `
-      <tr><td>${vName(x.vehicleId)}</td><td>${x.type}</td><td>₹${x.amount}</td><td>${x.date}</td></tr>
-    `).join("") : `<tr><td colspan="4" class="empty-state">No expenses</td></tr>`;
-
-    document.getElementById("total-cost-tbody").innerHTML = allVehicles.map(v => {
-      const fuel = allFuelLogs.filter(f => f.vehicleId === v.id).reduce((s, f) => s + f.cost, 0);
-      const maint = allMaintenance.filter(m => m.vehicleId === v.id).reduce((s, m) => s + (m.cost || 0), 0);
-      return `<tr><td>${v.name}</td><td>₹${fuel}</td><td>₹${maint}</td><td><strong>₹${fuel + maint}</strong></td></tr>`;
-    }).join("");
-
-    const vehicleOptions = allVehicles.map(v => `<option value="${v.id}">${v.name}</option>`).join("");
-    document.getElementById("fuel-vehicle-select").innerHTML = vehicleOptions;
-    document.getElementById("expense-vehicle-select").innerHTML = vehicleOptions;
-  }
-
-  function openFuelModal() { document.getElementById("fuel-modal").classList.add("show"); }
-  function closeFuelModal() { document.getElementById("fuel-modal").classList.remove("show"); }
-  function openExpenseModal() { document.getElementById("expense-modal").classList.add("show"); }
-  function closeExpenseModal() { document.getElementById("expense-modal").classList.remove("show"); }
-
-  async function handleAddFuel(e) {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const log = Object.fromEntries(fd.entries());
-    log.liters = Number(log.liters); log.cost = Number(log.cost);
-    try {
-      await apiSend("/api/fuel-logs", "POST", log);
-    } catch (err) {
-      log.id = allFuelLogs.length + 1;
-      allFuelLogs.push(log);
-    }
-    showToast("Fuel log added");
-    closeFuelModal();
-    loadExpensesPage();
-  }
-
-  async function handleAddExpense(e) {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const exp = Object.fromEntries(fd.entries());
-    exp.amount = Number(exp.amount);
-    try {
-      await apiSend("/api/expenses", "POST", exp);
-    } catch (err) {
-      exp.id = allExpenses.length + 1;
-      allExpenses.push(exp);
-    }
-    showToast("Expense added");
-    closeExpenseModal();
-    loadExpensesPage();
-  }
-</script>
+  </script>
 
 </body>
 </html>

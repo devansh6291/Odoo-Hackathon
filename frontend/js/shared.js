@@ -1,143 +1,146 @@
-const BACKEND_URL = "http://127.0.0.1:5000";
-const ROLE_NAV = {
-  "Fleet Manager": [
-    { key: "dashboard", icon: "fa-gauge", label: "Dashboard", href: "dashboard.html" },
-    { key: "vehicles", icon: "fa-van-shuttle", label: "Fleet", href: "vehicles.html" },
-    { key: "maintenance", icon: "fa-screwdriver-wrench", label: "Maintenance", href: "maintenance.html" },
-    { key: "settings", icon: "fa-gear", label: "Settings", href: "settings.html" },
-  ],
-  "Dispatcher": [
-    { key: "dashboard", icon: "fa-gauge", label: "Dashboard", href: "dashboard.html" },
-    { key: "trips", icon: "fa-route", label: "Trips", href: "trips.html" },
-    { key: "vehicles", icon: "fa-van-shuttle", label: "Fleet", href: "vehicles.html" },
-    { key: "settings", icon: "fa-gear", label: "Settings", href: "settings.html" },
-  ],
-  "Safety Officer": [
-    { key: "dashboard", icon: "fa-gauge", label: "Dashboard", href: "dashboard.html" },
-    { key: "drivers", icon: "fa-id-card", label: "Drivers", href: "drivers.html" },
-    { key: "settings", icon: "fa-gear", label: "Settings", href: "settings.html" },
-  ],
-  "Financial Analyst": [
-    { key: "dashboard", icon: "fa-gauge", label: "Dashboard", href: "dashboard.html" },
-    { key: "expenses", icon: "fa-gas-pump", label: "Fuel & Expenses", href: "expenses.html" },
-    { key: "reports", icon: "fa-chart-line", label: "Analytics", href: "reports.html" },
-    { key: "settings", icon: "fa-gear", label: "Settings", href: "settings.html" },
-  ],
+// ============================================================
+// roles.js — shared RBAC config + auth guard + nav renderer
+// Include this on every protected page:
+//   <script src="roles.js"></script>
+// ============================================================
+
+const LOGIN_PAGE = "login.html";
+const DASHBOARD_PAGE = "dashboard.html";
+
+const ROLE_CONFIG = {
+  "Fleet Manager": {
+    nav: [
+      { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html" },
+      { icon: "fa-van-shuttle", label: "Fleet", href: "vehicles.html" },
+      { icon: "fa-screwdriver-wrench", label: "Maintenance", href: "maintenance.html" },
+      { icon: "fa-gear", label: "Settings", href: "settings.html" },
+    ],
+    kpis: ["activeVehicles", "availableVehicles", "inMaintenance", "utilization"],
+    panels: ["vehicleStatus", "maintenanceAlerts"],
+  },
+  "Dispatcher": {
+    nav: [
+      { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html" },
+      { icon: "fa-route", label: "Trips", href: "trips.html" },
+      { icon: "fa-van-shuttle", label: "Fleet", href: "vehicles.html" },
+      { icon: "fa-gear", label: "Settings", href: "settings.html" },
+    ],
+    kpis: ["activeTrips", "pendingTrips", "availableVehicles", "driversOnDuty"],
+    panels: ["recentTrips", "vehicleStatus"],
+  },
+  "Safety Officer": {
+    nav: [
+      { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html" },
+      { icon: "fa-id-card", label: "Drivers", href: "drivers.html" },
+      { icon: "fa-shield-halved", label: "Compliance", href: "reports.html" },
+      { icon: "fa-gear", label: "Settings", href: "settings.html" },
+    ],
+    kpis: ["driversOnDuty", "suspendedDrivers", "expiringLicenses", "avgSafetyScore"],
+    panels: ["licenseExpiry", "driverStatus"],
+  },
+  "Financial Analyst": {
+    nav: [
+      { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html" },
+      { icon: "fa-gas-pump", label: "Fuel & Expenses", href: "expenses.html" },
+      { icon: "fa-chart-line", label: "Analytics", href: "reports.html" },
+      { icon: "fa-gear", label: "Settings", href: "settings.html" },
+    ],
+    kpis: ["operationalCost", "fuelCost", "maintenanceCost", "fleetUtilization"],
+    panels: ["costBreakdown", "topExpenseVehicles"],
+  },
 };
 
-const ALL_ROLES = Object.keys(ROLE_NAV);
-
-function currentRole() {
-  return localStorage.getItem("role") || "Dispatcher";
-}
-
-function currentUserName() {
-  return localStorage.getItem("name") || "Guest User";
-}
-
-function pageAllowedForRole(pageKey, role) {
-  const nav = ROLE_NAV[role] || [];
-  return nav.some(item => item.key === pageKey);
-}
-
-function mountShell(pageKey) {
+// ------------------------------------------------------------
+// Session helpers
+// ------------------------------------------------------------
+function getSession() {
+  const role = localStorage.getItem("role");
+  const name = localStorage.getItem("name");
   const token = localStorage.getItem("token");
-  if (!token) {
-    window.location.href = "index.html";
-    return false;
-  }
+  if (!role || !token || !ROLE_CONFIG[role]) return null;
+  return { role, name: name || "User", token };
+}
 
-  const role = currentRole();
+function setSession({ role, name, token }) {
+  localStorage.setItem("role", role);
+  localStorage.setItem("name", name);
+  localStorage.setItem("token", token);
+}
 
-  if (!pageAllowedForRole(pageKey, role)) {
-    document.body.innerHTML = `
-      <div class="access-denied">
-        <i class="fa-solid fa-lock"></i>
-        <h2>Access Restricted</h2>
-        <p>Your role (<strong>${role}</strong>) doesn't have permission to view this page.</p>
-        <a href="dashboard.html" class="btn btn-primary" style="margin-top:16px; text-decoration:none;">
-          Back to Dashboard
-        </a>
-      </div>`;
-    return false;
-  }
-
-  const nav = ROLE_NAV[role];
-  const navHtml = nav.map(item => `
-    <a href="${item.href}" class="${item.key === pageKey ? "active" : ""}" style="text-decoration:none;">
-      <li class="${item.key === pageKey ? "active" : ""}"><i class="fa-solid ${item.icon}"></i> ${item.label}</li>
-    </a>`).join("");
-
-  document.body.insertAdjacentHTML("afterbegin", `
-    <nav class="sidebar">
-      <div class="sidebar-brand">
-        <img src="assets/logo.png" alt="transiQ">
-        transiQ
-      </div>
-      <ul class="nav-links" style="list-style:none; padding:12px 0;">
-        ${navHtml}
-      </ul>
-      <div class="sidebar-footer">transiQ &copy; 2026</div>
-    </nav>
-    <div class="main">
-      <div class="topbar">
-        <div class="search-box">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Search...">
-        </div>
-        <div class="user-block">
-          <span class="user-name">${currentUserName()}</span>
-          <span class="role-badge">${role}</span>
-          <button class="logout-btn" onclick="logout()">Logout</button>
-        </div>
-      </div>
-      <div class="content" id="page-content"></div>
-    </div>
-    <div class="toast" id="app-toast"></div>
-  `);
-
-  return true;
+function clearSession() {
+  localStorage.removeItem("role");
+  localStorage.removeItem("name");
+  localStorage.removeItem("token");
 }
 
 function logout() {
-  localStorage.clear();
-  window.location.href = "index.html";
+  clearSession();
+  window.location.href = LOGIN_PAGE;
 }
 
-function showToast(message, type = "success") {
-  const el = document.getElementById("app-toast");
+// Current file name, e.g. "vehicles.html"
+function currentPage() {
+  const path = window.location.pathname.split("/").pop();
+  return path && path.length ? path : "dashboard.html";
+}
+
+// ------------------------------------------------------------
+// Guards — call both at the top of every protected page's script
+// ------------------------------------------------------------
+
+// 1) Must be logged in at all
+function requireAuth() {
+  const session = getSession();
+  if (!session) {
+    window.location.href = LOGIN_PAGE;
+    return null;
+  }
+  return session;
+}
+
+// 2) Must have this specific page in their role's nav (RBAC)
+function requireAccess(session) {
+  if (!session) return false;
+  const config = ROLE_CONFIG[session.role];
+  const allowed = config.nav.some(item => item.href === currentPage());
+  if (!allowed) {
+    alert(`Access denied: your role (${session.role}) does not have permission to view this page.`);
+    window.location.href = DASHBOARD_PAGE;
+    return false;
+  }
+  return true;
+}
+
+// Convenience: call once at top of page. Returns session or null (and redirects).
+function protectPage() {
+  const session = requireAuth();
+  if (!session) return null;
+  if (!requireAccess(session)) return null;
+  return session;
+}
+
+// ------------------------------------------------------------
+// Sidebar + topbar rendering (shared look across every page)
+// ------------------------------------------------------------
+function renderSidebar(session) {
+  const el = document.getElementById("nav-links");
   if (!el) return;
-  el.textContent = message;
-  el.className = `toast show ${type}`;
-  setTimeout(() => el.classList.remove("show"), 2500);
+  const config = ROLE_CONFIG[session.role];
+  const active = currentPage();
+  el.innerHTML = config.nav.map(item => `
+    <li class="${item.href === active ? "active" : ""}" onclick="window.location.href='${item.href}'">
+      <i class="fa-solid ${item.icon}"></i> ${item.label}
+    </li>
+  `).join("") + `
+    <li onclick="logout()" style="margin-top:auto; border-top:1px solid #24262c;">
+      <i class="fa-solid fa-arrow-right-from-bracket"></i> Log out
+    </li>
+  `;
 }
 
-async function apiGet(path) {
-  const token = localStorage.getItem("token");
-  const res = await fetch(`${BACKEND_URL}${path}`, {
-    headers: { "Authorization": `Bearer ${token}` },
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Request failed (${res.status})`);
-  }
-  return res.json();
-}
-
-async function apiSend(path, method, body) {
-  const token = localStorage.getItem("token");
-  const res = await fetch(`${BACKEND_URL}${path}`, {
-    method,
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Request failed (${res.status})`);
-  }
-  return res.json();
-}
-
-function statusClass(status) {
-  return status.replace(/\s+/g, "");
+function renderTopbar(session) {
+  const nameEl = document.getElementById("user-name");
+  const roleEl = document.getElementById("role-badge");
+  if (nameEl) nameEl.textContent = session.name;
+  if (roleEl) roleEl.textContent = session.role;
 }

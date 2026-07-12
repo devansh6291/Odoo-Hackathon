@@ -6,135 +6,89 @@
 <title>transiQ - Fleet</title>
 <link rel="icon" type="image/png" href="assets/logotq.png">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/shared.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f5f7; color: #1a1a1a; display: flex; min-height: 100vh;
+  }
+  .sidebar { width: 220px; background: #14161a; color: #e5e7eb; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-brand {
+    display: flex; align-items: center; gap: 10px; padding: 22px 20px;
+    font-size: 1.05rem; font-weight: 700; color: #fff; border-bottom: 1px solid #24262c;
+  }
+  .sidebar-brand img { width: 26px; height: auto; }
+  .nav-links { list-style: none; padding: 12px 0; flex: 1; display: flex; flex-direction: column; }
+  .nav-links li {
+    display: flex; align-items: center; gap: 12px; padding: 11px 20px; font-size: 0.88rem;
+    color: #9a9da4; cursor: pointer; transition: background 0.15s, color 0.15s; user-select: none;
+  }
+  .nav-links li i { width: 16px; text-align: center; }
+  .nav-links li:hover { background: #1c1e24; color: #e5e7eb; }
+  .nav-links li.active { background: #7c5cff; color: #fff; }
+  .main { flex: 1; display: flex; flex-direction: column; }
+  .topbar {
+    background: #fff; padding: 14px 28px; display: flex; align-items: center;
+    justify-content: space-between; border-bottom: 1px solid #e5e7eb;
+  }
+  .user-block { display: flex; align-items: center; gap: 12px; }
+  .user-name { font-size: 0.85rem; color: #4a4d54; }
+  .role-badge { background: #7c5cff; color: #fff; font-size: 0.72rem; font-weight: 600; padding: 5px 10px; border-radius: 20px; }
+  .content { padding: 26px 28px; flex: 1; }
+  .page-header { margin-bottom: 20px; }
+  .page-header h1 { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+  .page-header p { font-size: 0.85rem; color: #6b6e75; }
+  .card-box {
+    background: #fff; border-radius: 10px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    color: #6b6e75; min-height: 260px;
+  }
+  .card-box i { font-size: 2.2rem; color: #7c5cff; margin-bottom: 16px; }
+  .card-box h3 { font-size: 1rem; color: #2a2a2a; margin-bottom: 8px; }
+  .card-box p { font-size: 0.85rem; max-width: 420px; }
+</style>
 </head>
 <body>
 
-<script src="backend/mapper.js"></script>
-<script>
-  if (mountShell("vehicles")) {
-    document.getElementById("page-content").innerHTML = `
-      <div class="page-header">
-        <h2>Vehicle Registry</h2>
-        <button class="btn btn-primary" onclick="openVehicleModal()"><i class="fa-solid fa-plus"></i> Add Vehicle</button>
-      </div>
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <img src="assets/logotq.png" alt="transiQ" onerror="this.style.display='none'">
+      transiQ
+    </div>
+    <ul class="nav-links" id="nav-links"></ul>
+  </nav>
 
-      <div class="filters">
-        <select id="filter-type"><option value="">Type: All</option><option>Van</option><option>Truck</option><option>Bike</option></select>
-        <select id="filter-status"><option value="">Status: All</option><option>Available</option><option>On Trip</option><option>In Shop</option><option>Retired</option></select>
+  <div class="main">
+    <div class="topbar">
+      <div></div>
+      <div class="user-block">
+        <span class="user-name" id="user-name">—</span>
+        <span class="role-badge" id="role-badge">—</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <h1>Fleet</h1>
+        <p>Vehicle inventory and status across the fleet.</p>
       </div>
 
       <div class="card-box">
-        <table>
-          <thead><tr>
-            <th>Reg. No. (Unique)</th><th>Name</th><th>Type</th><th>Capacity</th><th>Odometer</th><th>Status</th>
-          </tr></thead>
-          <tbody id="vehicles-tbody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
-        </table>
+        <i class="fa-solid fa-van-shuttle"></i>
+        <h3>Fleet module</h3>
+        <p>This page is scaffolded and RBAC-protected — only roles with Fleet in their sidebar can reach it. Wire it up to your Flask API (/api/vehicles) the same way dashboard.html pulls its data.</p>
       </div>
-    `;
+    </div>
+  </div>
 
-    document.querySelectorAll(".sidebar, .search-box").forEach(() => {});
-    document.getElementById("filter-type").addEventListener("change", loadVehicles);
-    document.getElementById("filter-status").addEventListener("change", loadVehicles);
-
-    document.body.insertAdjacentHTML("beforeend", `
-      <div class="modal-overlay" id="vehicle-modal">
-        <div class="modal-box">
-          <h3>Add Vehicle</h3>
-          <form id="vehicle-form">
-            <div class="field"><label>Registration Number (unique)</label><input name="regNumber" required></div>
-            <div class="field"><label>Name / Model</label><input name="name" required></div>
-            <div class="field"><label>Type</label>
-              <select name="type"><option>Van</option><option>Truck</option><option>Bike</option></select></div>
-            <div class="field"><label>Max Load Capacity (kg)</label><input type="number" name="maxLoadCapacity" required></div>
-            <div class="field"><label>Odometer</label><input type="number" name="odometer" value="0"></div>
-            <div class="field"><label>Acquisition Cost</label><input type="number" name="acquisitionCost" required></div>
-            <div id="vehicle-error" class="error-text"></div>
-            <div class="modal-actions">
-              <button type="button" class="btn btn-outline" onclick="closeVehicleModal()">Cancel</button>
-              <button type="submit" class="btn btn-primary">Save Vehicle</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    `);
-
-    document.getElementById("vehicle-form").addEventListener("submit", handleAddVehicle);
-    loadVehicles();
-  }
-
-  let allVehicles = [];
-
-  const dummyVehicles = [
-    { id: 1, regNumber: "MP09AB1234", name: "Van-05", type: "Van", maxLoadCapacity: 500, odometer: 12500, acquisitionCost: 800000, status: "Available" },
-    { id: 2, regNumber: "MP09CD5678", name: "Truck-11", type: "Truck", maxLoadCapacity: 2000, odometer: 45000, acquisitionCost: 1500000, status: "On Trip" },
-    { id: 3, regNumber: "MP09EF9012", name: "Mini-08", type: "Van", maxLoadCapacity: 1000, odometer: 30000, acquisitionCost: 950000, status: "In Shop" },
-    { id: 4, regNumber: "MP09GH3456", name: "Truck-07", type: "Truck", maxLoadCapacity: 1800, odometer: 60000, acquisitionCost: 1400000, status: "Retired" },
-  ];
-
-  async function loadVehicles() {
-    const tbody = document.getElementById("vehicles-tbody");
-    try {
-      allVehicles = await apiGet("/api/vehicles");
-    } catch (e) {
-      console.warn("Using dummy vehicles:", e.message);
-      allVehicles = dummyVehicles;
+  <script src="roles.js"></script>
+  <script>
+    const session = protectPage();
+    if (session) {
+      renderSidebar(session);
+      renderTopbar(session);
     }
-
-    const typeFilter = document.getElementById("filter-type").value;
-    const statusFilter = document.getElementById("filter-status").value;
-    let rows = allVehicles;
-    if (typeFilter) rows = rows.filter(v => v.type === typeFilter);
-    if (statusFilter) rows = rows.filter(v => v.status === statusFilter);
-
-    tbody.innerHTML = rows.length ? rows.map(v => `
-      <tr>
-        <td>${v.regNumber}</td><td>${v.name}</td><td>${v.type}</td>
-        <td>${v.maxLoadCapacity} kg</td><td>${v.odometer}</td>
-        <td><span class="status-pill status-${statusClass(v.status)}">${v.status}</span></td>
-      </tr>
-    `).join("") : `<tr><td colspan="6" class="empty-state">No vehicles found</td></tr>`;
-  }
-
-  function openVehicleModal() {
-    document.getElementById("vehicle-error").textContent = "";
-    document.getElementById("vehicle-form").reset();
-    document.getElementById("vehicle-modal").classList.add("show");
-  }
-
-  function closeVehicleModal() {
-    document.getElementById("vehicle-modal").classList.remove("show");
-  }
-
-  async function handleAddVehicle(e) {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const vehicle = Object.fromEntries(fd.entries());
-    vehicle.maxLoadCapacity = Number(vehicle.maxLoadCapacity);
-    vehicle.odometer = Number(vehicle.odometer);
-    vehicle.acquisitionCost = Number(vehicle.acquisitionCost);
-
-    if (allVehicles.some(v => v.regNumber === vehicle.regNumber)) {
-      document.getElementById("vehicle-error").textContent = "Registration number must be unique";
-      return;
-    }
-
-    try {
-      await apiSend("/api/vehicles", "POST", vehicle);
-      showToast("Vehicle added successfully");
-      closeVehicleModal();
-      loadVehicles();
-    } catch (err) {
-      vehicle.id = allVehicles.length + 1;
-      vehicle.status = "Available";
-      allVehicles.push(vehicle);
-      showToast("Vehicle added (offline mode)", "success");
-      closeVehicleModal();
-      loadVehicles();
-    }
-  }
-</script>
+  </script>
 
 </body>
 </html>
