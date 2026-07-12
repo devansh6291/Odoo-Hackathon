@@ -201,15 +201,9 @@
   <script src="roles.js"></script>
   <script>
     // ------------------------------------------------------------
-    // MOCK USER DIRECTORY — swap this block for a real backend call
-    // (e.g. fetch('/api/login', {method:'POST', body: JSON.stringify({email,password})}))
+    // BACKEND CONFIG — point this at your running Flask API
     // ------------------------------------------------------------
-    const USERS = {
-      "manager@transiq.com":  { password: "password", role: "Fleet Manager",     name: "Alex Rivera" },
-      "dispatch@transiq.com": { password: "password", role: "Dispatcher",        name: "Raven K." },
-      "safety@transiq.com":   { password: "password", role: "Safety Officer",    name: "Sam Osei" },
-      "finance@transiq.com":  { password: "password", role: "Financial Analyst", name: "Jordan Lee" },
-    };
+    const API_BASE_URL = "http://127.0.0.1:5000";
 
     const MAX_ATTEMPTS = 5;
     let attempts = 0;
@@ -230,7 +224,7 @@
       errorBanner.classList.add("show");
     }
 
-    form.addEventListener("submit", function (e) {
+    form.addEventListener("submit", async function (e) {
       e.preventDefault();
 
       if (attempts >= MAX_ATTEMPTS) {
@@ -242,38 +236,48 @@
       const password = document.getElementById("password").value;
       const selectedRole = document.getElementById("role").value;
 
-      const user = USERS[email];
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Signing in...";
 
-      if (!user || user.password !== password) {
+      let res, data;
+      try {
+        res = await fetch(`${API_BASE_URL}/api/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, role: selectedRole }),
+        });
+        data = await res.json();
+      } catch (networkErr) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Sign In";
+        showError("Couldn't reach the server. Is the backend running on " + API_BASE_URL + "?");
+        return;
+      }
+
+      if (!res.ok) {
         attempts++;
-        const remaining = MAX_ATTEMPTS - attempts;
+        submitBtn.disabled = attempts >= MAX_ATTEMPTS ? true : false;
+        submitBtn.textContent = "Sign In";
+
+        // Backend already tells us exactly what went wrong (bad creds, role
+        // mismatch, or account locked) — surface that message directly.
+        const remaining = data.attemptsRemaining;
         showError(
-          remaining > 0
-            ? `Invalid credentials. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`
-            : "Invalid credentials. Account locked after 5 failed attempts."
+          remaining !== undefined && remaining > 0
+            ? `${data.error}. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`
+            : data.error || "Login failed."
         );
-        if (attempts >= MAX_ATTEMPTS) {
-          submitBtn.disabled = true;
-        }
         return;
       }
 
-      // RBAC check: the role picked in the dropdown must match the account's actual role
-      if (user.role !== selectedRole) {
-        attempts++;
-        showError(`This account is registered as "${user.role}", not "${selectedRole}". Select the correct role.`);
-        return;
-      }
-
-      // Success — create session and redirect to the dashboard
+      // Success — backend returned { token, email, name, role }
       errorBanner.classList.remove("show");
       successBanner.classList.add("show");
-      submitBtn.disabled = true;
 
       setSession({
-        role: user.role,
-        name: user.name,
-        token: "demo-token-" + Date.now(), // placeholder for a real JWT/session token
+        role: data.role,
+        name: data.name,
+        token: data.token,
       });
 
       setTimeout(() => {
