@@ -329,10 +329,6 @@
   <script>
     const BACKEND_URL = "http://127.0.0.1:5000";
 
-    // ============================================================
-    // ROLE CONFIG — this is the core of the RBAC UI.
-    // Each role gets its own sidebar items, KPI set, and panels.
-    // ============================================================
     const ROLE_CONFIG = {
       "Fleet Manager": {
         nav: [
@@ -393,9 +389,6 @@
       fleetUtilization: { label: "Fleet Utilization", cls: "green" },
     };
 
-    // ============================================================
-    // DUMMY DATA — used whenever the backend isn't reachable
-    // ============================================================
     const DUMMY = {
       activeVehicles: 53, availableVehicles: 42, inMaintenance: 5, utilization: "81%",
       activeTrips: 18, pendingTrips: 9, driversOnDuty: 26,
@@ -446,9 +439,6 @@
       { vehicle: "Mini-08", cost: "₹11,200" },
     ];
 
-    // ============================================================
-    // API HELPER
-    // ============================================================
     async function apiGet(path) {
       const token = localStorage.getItem("token");
       const headers = token ? { "Authorization": `Bearer ${token}` } : {};
@@ -466,10 +456,6 @@
       return "ok";
     }
 
-    // ============================================================
-    // ROLE-SPECIFIC DATA LOADERS — each returns { kpiValues, panelsHtml }
-    // Falls back to dummy data automatically if backend call fails.
-    // ============================================================
     async function loadFleetManagerData() {
       let kpiValues = {
         activeVehicles: DUMMY.activeVehicles, availableVehicles: DUMMY.availableVehicles,
@@ -641,9 +627,6 @@
       "Financial Analyst": loadFinancialAnalystData,
     };
 
-    // ============================================================
-    // PANEL HTML BUILDERS (take real or dummy rows, same either way)
-    // ============================================================
     function renderRecentTripsPanel(rows) {
       return `
         <div class="card-box">
@@ -725,12 +708,9 @@
         </div>`;
     }
 
-    // ============================================================
-    // MAIN RENDER — reads role from localStorage, loads real data
-    // ============================================================
     async function renderDashboardForRole() {
-      const role = localStorage.getItem("role") || "Dispatcher";
-      const name = localStorage.getItem("name") || "Guest User";
+      const role = "Dispatcher";
+      const name = "Dashboard User";
       const config = ROLE_CONFIG[role] || ROLE_CONFIG["Dispatcher"];
 
       document.getElementById("user-name").textContent = name;
@@ -748,7 +728,8 @@
       document.getElementById("panels").innerHTML = `<p style="color:#8a8d94;">Loading dashboard...</p>`;
 
       const loader = ROLE_DATA_LOADERS[role] || ROLE_DATA_LOADERS["Dispatcher"];
-      const { kpiValues, panelsHtml } = await loader();
+      document.getElementById("panels").innerHTML = "<h1>Dashboard Connected!</h1>";
+      // const { kpiValues, panelsHtml } = await loader();
 
       document.getElementById("kpi-grid").innerHTML = config.kpis.map(key => `
         <div class="kpi-card ${KPI_LABELS[key].cls}">
