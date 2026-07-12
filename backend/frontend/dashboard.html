@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>transiQ - Dashboard</title>
-<link rel="icon" type="image/png" href="assets/logo.png">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -291,11 +290,19 @@
   .alert-item i { color: #d97706; }
 </style>
 </head>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM fully loaded and parsed");
+    // This is a test to see if buttons respond
+    document.querySelectorAll('button, li').forEach(el => {
+      el.addEventListener('click', () => console.log("Button clicked: ", el.textContent));
+    });
+  });
+</script>
 <body>
 
   <nav class="sidebar">
     <div class="sidebar-brand">
-      <img src="assets/logo.png" alt="transiQ">
       transiQ
     </div>
     <ul class="nav-links" id="nav-links"></ul>
