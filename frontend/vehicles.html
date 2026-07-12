@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>transiQ - Fleet</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+
+<script src="js/shared.js"></script>
+<script>
+  if (mountShell("vehicles")) {
+    document.getElementById("page-content").innerHTML = `
+      <div class="page-header">
+        <h2>Vehicle Registry</h2>
+        <button class="btn btn-primary" onclick="openVehicleModal()"><i class="fa-solid fa-plus"></i> Add Vehicle</button>
+      </div>
+
+      <div class="filters">
+        <select id="filter-type"><option value="">Type: All</option><option>Van</option><option>Truck</option><option>Bike</option></select>
+        <select id="filter-status"><option value="">Status: All</option><option>Available</option><option>On Trip</option><option>In Shop</option><option>Retired</option></select>
+      </div>
+
+      <div class="card-box">
+        <table>
+          <thead><tr>
+            <th>Reg. No. (Unique)</th><th>Name</th><th>Type</th><th>Capacity</th><th>Odometer</th><th>Status</th>
+          </tr></thead>
+          <tbody id="vehicles-tbody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    `;
+
+    document.querySelectorAll(".sidebar, .search-box").forEach(() => {});
+    document.getElementById("filter-type").addEventListener("change", loadVehicles);
+    document.getElementById("filter-status").addEventListener("change", loadVehicles);
+
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal-overlay" id="vehicle-modal">
+        <div class="modal-box">
+          <h3>Add Vehicle</h3>
+          <form id="vehicle-form">
+            <div class="field"><label>Registration Number (unique)</label><input name="regNumber" required></div>
+            <div class="field"><label>Name / Model</label><input name="name" required></div>
+            <div class="field"><label>Type</label>
+              <select name="type"><option>Van</option><option>Truck</option><option>Bike</option></select></div>
+            <div class="field"><label>Max Load Capacity (kg)</label><input type="number" name="maxLoadCapacity" required></div>
+            <div class="field"><label>Odometer</label><input type="number" name="odometer" value="0"></div>
+            <div class="field"><label>Acquisition Cost</label><input type="number" name="acquisitionCost" required></div>
+            <div id="vehicle-error" class="error-text"></div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-outline" onclick="closeVehicleModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Vehicle</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `);
+
+    document.getElementById("vehicle-form").addEventListener("submit", handleAddVehicle);
+    loadVehicles();
+  }
+
+  let allVehicles = [];
+
+  const dummyVehicles = [
+    { id: 1, regNumber: "MP09AB1234", name: "Van-05", type: "Van", maxLoadCapacity: 500, odometer: 12500, acquisitionCost: 800000, status: "Available" },
+    { id: 2, regNumber: "MP09CD5678", name: "Truck-11", type: "Truck", maxLoadCapacity: 2000, odometer: 45000, acquisitionCost: 1500000, status: "On Trip" },
+    { id: 3, regNumber: "MP09EF9012", name: "Mini-08", type: "Van", maxLoadCapacity: 1000, odometer: 30000, acquisitionCost: 950000, status: "In Shop" },
+    { id: 4, regNumber: "MP09GH3456", name: "Truck-07", type: "Truck", maxLoadCapacity: 1800, odometer: 60000, acquisitionCost: 1400000, status: "Retired" },
+  ];
+
+  async function loadVehicles() {
+    const tbody = document.getElementById("vehicles-tbody");
+    try {
+      allVehicles = await apiGet("/api/vehicles");
+    } catch (e) {
+      console.warn("Using dummy vehicles:", e.message);
+      allVehicles = dummyVehicles;
+    }
+
+    const typeFilter = document.getElementById("filter-type").value;
+    const statusFilter = document.getElementById("filter-status").value;
+    let rows = allVehicles;
+    if (typeFilter) rows = rows.filter(v => v.type === typeFilter);
+    if (statusFilter) rows = rows.filter(v => v.status === statusFilter);
+
+    tbody.innerHTML = rows.length ? rows.map(v => `
+      <tr>
+        <td>${v.regNumber}</td><td>${v.name}</td><td>${v.type}</td>
+        <td>${v.maxLoadCapacity} kg</td><td>${v.odometer}</td>
+        <td><span class="status-pill status-${statusClass(v.status)}">${v.status}</span></td>
+      </tr>
+    `).join("") : `<tr><td colspan="6" class="empty-state">No vehicles found</td></tr>`;
+  }
+
+  function openVehicleModal() {
+    document.getElementById("vehicle-error").textContent = "";
+    document.getElementById("vehicle-form").reset();
+    document.getElementById("vehicle-modal").classList.add("show");
+  }
+
+  function closeVehicleModal() {
+    document.getElementById("vehicle-modal").classList.remove("show");
+  }
+
+  async function handleAddVehicle(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const vehicle = Object.fromEntries(fd.entries());
+    vehicle.maxLoadCapacity = Number(vehicle.maxLoadCapacity);
+    vehicle.odometer = Number(vehicle.odometer);
+    vehicle.acquisitionCost = Number(vehicle.acquisitionCost);
+
+    if (allVehicles.some(v => v.regNumber === vehicle.regNumber)) {
+      document.getElementById("vehicle-error").textContent = "Registration number must be unique";
+      return;
+    }
+
+    try {
+      await apiSend("/api/vehicles", "POST", vehicle);
+      showToast("Vehicle added successfully");
+      closeVehicleModal();
+      loadVehicles();
+    } catch (err) {
+      vehicle.id = allVehicles.length + 1;
+      vehicle.status = "Available";
+      allVehicles.push(vehicle);
+      showToast("Vehicle added (offline mode)", "success");
+      closeVehicleModal();
+      loadVehicles();
+    }
+  }
+</script>
+
+</body>
+</html>

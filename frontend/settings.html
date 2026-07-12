@@ -1,234 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>transiQ — Settings &amp; RBAC</title>
-<link rel="icon" type="image/png" href="assets/setting.png">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
-
-:root{
-  --bg:#F5F3EE;
-  --panel:#FFFFFF;
-  --panel-2:#F1EEE7;
-  --border:#E2DED4;
-  --text:#1C1B18;
-  --muted:#75726A;
-  --purple:#8B2FC9;
-  --purple-2:#6D28D9;
-  --purple-soft:rgba(139,47,201,.10);
-  --success:#2F8F5B;
-  --danger:#C0403B;
-}
-*{box-sizing:border-box;}
-body{margin:0; font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;}
-.disp{font-family:'Poppins',sans-serif;}
-.mono{font-family:'IBM Plex Mono',monospace;}
-
-.app{display:flex; min-height:100vh;}
-
-.sidebar-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 22px 20px;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #fff;
-    border-bottom: 1px solid #24262c;
-  }
-  .sidebar {
-    width: 220px;
-    background: #14161a;
-    color: #e5e7eb;
-    gap: 10px;
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-  }
-   .sidebar-brand img {
-    width: 26px;
-    height: auto;
-  }
-
-  .nav-links {
-    list-style: none;
-    padding: 12px 0;
-    flex: 1;
-  }
-
-  .nav-links li {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 11px 20px;
-    font-size: 0.88rem;
-    color: #9a9da4;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-  }
-
-  .nav-links li i { width: 16px; text-align: center; }
-
-  .nav-links li:hover {
-    background: #1c1e24;
-    color: #e5e7eb;
-  }
-
-  .nav-links li.active {
-    background: #7c5cff;
-    color: #fff;
-  }
-/* MAIN */
-.main{flex:1; display:flex; flex-direction:column; min-width:0;}
-.topbar{display:flex; align-items:center; justify-content:space-between; gap:20px; padding:16px 28px; border-bottom:1px solid var(--border);}
-.search{flex:1; max-width:340px;}
-.search input{
-  width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text);
-  padding:9px 13px; border-radius:8px; font-size:13px; font-family:'Inter'; outline:none;
-}
-.search input::placeholder{color:#A8A498;}
-.search input:focus{border-color:var(--purple);}
-
-.user-chip{display:flex; align-items:center; gap:10px;}
-.user-chip .uname{font-size:13px; color:var(--muted); font-weight:500;}
-.role-badge{
-  display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--border);
-  border-radius:20px; padding:5px 6px 5px 14px; font-size:12.5px; font-weight:600;
-}
-.role-badge .avatar-sm{
-  width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--purple-2));
-  display:flex; align-items:center; justify-content:center; font-family:'Poppins'; font-weight:700; font-size:10.5px; color:#fff;
-}
-
-.content{padding:28px; flex:1;}
-.page-head{margin-bottom:22px;}
-.page-head h2{font-size:22px; margin:0; font-family:'Poppins'; font-weight:700;}
-
-.settings-layout{display:grid; grid-template-columns:1fr 1.6fr; gap:20px; align-items:start;}
-@media (max-width:1000px){.settings-layout{grid-template-columns:1fr;}}
-
-.card{background:var(--panel); border:1px solid var(--border); border-radius:10px; overflow:hidden; box-shadow:0 1px 3px rgba(20,17,10,.05);}
-.card .card-head{padding:14px 18px; border-bottom:1px solid var(--border);}
-.card .card-head h3{margin:0; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-family:'Poppins'; font-weight:600;}
-
-.settings-body{padding:18px;}
-.field{margin-bottom:16px;}
-.field label{display:block; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:7px;}
-.field input, .field select{
-  width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text);
-  padding:10px 12px; border-radius:7px; font-size:13.5px; font-family:'Inter'; outline:none;
-}
-.field input:focus, .field select:focus{border-color:var(--purple);}
-.btn{background:linear-gradient(135deg,var(--purple),var(--purple-2)); color:#fff; border:none; padding:10px 20px; border-radius:7px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Inter';}
-.btn:hover{filter:brightness(1.08);}
-
-/* RBAC MATRIX */
-.rbac-table{width:100%; border-collapse:collapse; font-size:13px;}
-.rbac-table th{
-  text-align:left; padding:12px 16px; color:var(--muted); font-weight:600; font-size:10.5px;
-  letter-spacing:.06em; text-transform:uppercase; border-bottom:1px solid var(--border); background:var(--panel-2);
-}
-.rbac-table th:not(:first-child){text-align:center;}
-.rbac-table td{padding:13px 16px; border-bottom:1px solid var(--border);}
-.rbac-table tr:last-child td{border-bottom:none;}
-.rbac-table td:not(:first-child){text-align:center;}
-.role-name{font-weight:600;}
-.perm{display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; font-size:13px; font-weight:700;}
-.perm.yes{background:rgba(76,154,106,.16); color:var(--success);}
-.perm.no{color:#C4C0B4; font-weight:400;}
-.perm.view{background:rgba(139,47,201,.10); color:#6D28D9; font-size:10.5px; font-weight:600; width:auto; padding:0 8px; border-radius:20px;}
-
-.rbac-note{padding:14px 18px; font-size:11.5px; color:var(--muted); font-family:'IBM Plex Mono'; border-top:1px dashed var(--border);}
-</style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>transiQ - Settings</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
 </head>
 <body>
 
-<div class="app">
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="mini-logo">TQ</div>
-      <div class="word">transiQ</div>
-    </div>
-    <ul class="nav-links">
-      <li><i class="fas fa-home"></i> Dashboard</li>
-      <li><i class="fas fa-truck"></i> Fleet</li>
-      <li><i class="fas fa-user"></i> Drivers</li>
-      <li><i class="fas fa-route"></i> Trips</li>
-      <li><i class="fas fa-wrench"></i> Maintenance</li>
-    <li><i class="fas fa-wrench"></i> Fuels and Expenses</li>
-    <li><i class="fas fa-wrench"></i> Analytics</li>
-    <li><i class="fas fa-wrench"></i> Settings</li>
-  </aside>
+<script src="js/shared.js"></script>
+<script>
+  if (mountShell("settings")) {
+    const role = currentRole();
+    const name = currentUserName();
 
-  <div class="main">
-    <div class="topbar">
-      <div class="search"><input placeholder="Search..."></div>
-      <div class="user-chip">
-        <span class="uname">Raven K.</span>
-        <div class="role-badge">Dispatcher <div class="avatar-sm">RK</div></div>
+    const allPages = ["dashboard", "vehicles", "drivers", "trips", "maintenance", "expenses", "reports", "settings"];
+    const pageLabels = {
+      dashboard: "Dashboard", vehicles: "Fleet", drivers: "Drivers",
+      trips: "Trips", maintenance: "Maintenance", expenses: "Fuel & Expenses",
+      reports: "Analytics", settings: "Settings",
+    };
+
+    document.getElementById("page-content").innerHTML = `
+      <div class="page-header"><h2>Settings & RBAC</h2></div>
+
+      <div class="card-box" style="max-width:420px;">
+        <h3>Account</h3>
+        <div class="field"><label>Name</label><input value="${name}" disabled></div>
+        <div class="field"><label>Role</label><input value="${role}" disabled></div>
+        <button class="btn btn-outline" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
       </div>
-    </div>
 
-    <div class="content">
-      <div class="page-head"><h2>Settings &amp; RBAC</h2></div>
-
-      <div class="settings-layout">
-        <div class="card">
-          <div class="card-head"><h3>General</h3></div>
-          <div class="settings-body">
-            <div class="field"><label>Depot Name</label><input value="Gandhinagar Depot GJ4"></div>
-            <div class="field"><label>Currency</label><input value="INR (₹)"></div>
-            <div class="field"><label>Distance Unit</label><input value="Kilometers"></div>
-            <button class="btn">Save Changes</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-head"><h3>Role-Based Access (RBAC)</h3></div>
-          <table class="rbac-table">
+      <div class="card-box">
+        <h3>Role-Based Access Control Matrix</h3>
+        <table class="rbac-matrix">
+          <thead>
             <tr>
-              <th>Role</th><th>Fleet</th><th>Drivers</th><th>Trips</th><th>Fuel / Exp.</th><th>Analytics</th>
+              <th>Page</th>
+              ${ALL_ROLES.map(r => `<th>${r}</th>`).join("")}
             </tr>
-            <tr>
-              <td class="role-name">Fleet Manager</td>
-              <td><span class="perm yes">✓</span></td>
-              <td><span class="perm yes">✓</span></td>
-              <td><span class="perm no">—</span></td>
-              <td><span class="perm no">—</span></td>
-              <td><span class="perm yes">✓</span></td>
-            </tr>
-            <tr>
-              <td class="role-name">Dispatcher</td>
-              <td><span class="perm view">view</span></td>
-              <td><span class="perm no">—</span></td>
-              <td><span class="perm yes">✓</span></td>
-              <td><span class="perm no">—</span></td>
-              <td><span class="perm no">—</span></td>
-            </tr>
-            <tr>
-              <td class="role-name">Safety Officer</td>
-              <td><span class="perm no">—</span></td>
-              <td><span class="perm yes">✓</span></td>
-              <td><span class="perm view">view</span></td>
-              <td><span class="perm no">—</span></td>
-              <td><span class="perm no">—</span></td>
-            </tr>
-            <tr>
-              <td class="role-name">Financial Analyst</td>
-              <td><span class="perm view">view</span></td>
-              <td><span class="perm no">—</span></td>
-              <td><span class="perm no">—</span></td>
-              <td><span class="perm yes">✓</span></td>
-              <td><span class="perm yes">✓</span></td>
-            </tr>
-          </table>
-          <div class="rbac-note">✓ FULL ACCESS · VIEW = READ-ONLY · — = NO ACCESS. ENFORCED SERVER-SIDE ON EVERY REQUEST, NOT JUST HIDDEN IN THE UI.</div>
-        </div>
+          </thead>
+          <tbody>
+            ${allPages.map(p => `
+              <tr>
+                <td>${pageLabels[p]}</td>
+                ${ALL_ROLES.map(r => `
+                  <td>${pageAllowedForRole(p, r)
+                    ? '<i class="fa-solid fa-check rbac-check"></i>'
+                    : '<i class="fa-solid fa-xmark rbac-cross"></i>'}</td>
+                `).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        <p style="font-size:0.78rem; color:#8a8d94; margin-top:14px;">
+          Access is enforced both in the sidebar (hidden items) and on page load (direct URL access is blocked with an Access Restricted screen).
+        </p>
       </div>
-    </div>
-  </div>
-</div>
+    `;
+  }
+</script>
 
 </body>
 </html>
