@@ -1,10 +1,37 @@
 import sqlite3
+import os
 
 def seed_database():
-    conn = sqlite3.connect('transitops.db')
+    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'transitops.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
-    # Insert Dummy Vehicles
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS vehicles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            registration_number TEXT UNIQUE,
+            name_model TEXT,
+            type TEXT,
+            max_load_capacity REAL,
+            odometer REAL,
+            acquisition_cost REAL,
+            status TEXT DEFAULT 'Available'
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS drivers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            license_number TEXT UNIQUE,
+            license_category TEXT,
+            license_expiry_date TEXT,
+            contact_number TEXT,
+            safety_score REAL,
+            status TEXT DEFAULT 'Available'
+        )
+    ''')
+
     vehicles = [
         ('VAN-01', 'Ford Transit', 'Van', 1000.0, 15000, 35000),
         ('TRK-99', 'Volvo FH16', 'Heavy Truck', 25000.0, 120000, 150000),
@@ -15,7 +42,6 @@ def seed_database():
         VALUES (?, ?, ?, ?, ?, ?)
     ''', vehicles)
 
-    # Insert Dummy Drivers
     drivers = [
         ('Alex Mercer', 'DL-12345', 'Heavy', '2028-10-15', '555-0101', 9.5),
         ('Sarah Connor', 'DL-98765', 'Light', '2027-05-22', '555-0202', 8.8)
@@ -27,10 +53,8 @@ def seed_database():
 
     conn.commit()
     conn.close()
-    print("Database seeded with test vehicles and drivers!")
-
-if __name__ == '__main__':
-    seed_database()
+    
+    print(f"Data successfully seeded into database at: {db_path}")
 
 if __name__ == '__main__':
     seed_database()
