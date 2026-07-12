@@ -1,9 +1,4 @@
 const BACKEND_URL = "http://127.0.0.1:5000";
-
-// ============================================================
-// RBAC CONFIG — single source of truth for who sees what.
-// Add a new role or page by editing this object only.
-// ============================================================
 const ROLE_NAV = {
   "Fleet Manager": [
     { key: "dashboard", icon: "fa-gauge", label: "Dashboard", href: "dashboard.html" },
@@ -45,12 +40,6 @@ function pageAllowedForRole(pageKey, role) {
   return nav.some(item => item.key === pageKey);
 }
 
-// ============================================================
-// PAGE SHELL — call this at the top of every page (except login)
-// Handles: auth check, RBAC page guard, sidebar + topbar render.
-// Returns true if access is granted, false if blocked (page already
-// replaced with an access-denied screen in that case).
-// ============================================================
 function mountShell(pageKey) {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -115,9 +104,6 @@ function logout() {
   window.location.href = "index.html";
 }
 
-// ============================================================
-// TOAST
-// ============================================================
 function showToast(message, type = "success") {
   const el = document.getElementById("app-toast");
   if (!el) return;
@@ -126,9 +112,6 @@ function showToast(message, type = "success") {
   setTimeout(() => el.classList.remove("show"), 2500);
 }
 
-// ============================================================
-// API HELPER
-// ============================================================
 async function apiGet(path) {
   const token = localStorage.getItem("token");
   const res = await fetch(`${BACKEND_URL}${path}`, {
