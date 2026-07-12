@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>transiQ - Dashboard</title>
+
+<link rel="icon" type="image/png" href="assets/layout.png">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f5f7;
+    color: #1a1a1a;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    width: 220px;
+    background: #14161a;
+    color: #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 22px 20px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    border-bottom: 1px solid #24262c;
+  }
+
+  .sidebar-brand img {
+    width: 26px;
+    height: auto;
+  }
+
+  .nav-links {
+    list-style: none;
+    padding: 12px 0;
+    flex: 1;
+  }
+
+  .nav-links li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 20px;
+    font-size: 0.88rem;
+    color: #9a9da4;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .nav-links li i { width: 16px; text-align: center; }
+
+  .nav-links li:hover {
+    background: #1c1e24;
+    color: #e5e7eb;
+  }
+
+  .nav-links li.active {
+    background: #7c5cff;
+    color: #fff;
+  }
+
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    background: #fff;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f4f5f7;
+    border-radius: 8px;
+    padding: 8px 14px;
+    width: 320px;
+    color: #8a8d94;
+  }
+
+  .search-box input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.85rem;
+    width: 100%;
+  }
+
+  .user-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .user-name {
+    font-size: 0.85rem;
+    color: #4a4d54;
+  }
+
+  .role-badge {
+    background: #7c5cff;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 20px;
+  }
+
+  .content {
+    padding: 26px 28px;
+    flex: 1;
+  }
+
+  .filters {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .filters select {
+    padding: 8px 14px;
+    border: 1px solid #e0e1e5;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 0.82rem;
+    color: #4a4d54;
+    outline: none;
+  }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px 16px;
+    border-left: 4px solid #7c5cff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .kpi-card.green { border-left-color: #16a34a; }
+  .kpi-card.orange { border-left-color: #d97706; }
+  .kpi-card.blue { border-left-color: #2563eb; }
+
+  .kpi-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #8a8d94;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+
+  .kpi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .panels {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 20px;
+  }
+
+  .card-box {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .card-box h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b6e75;
+    margin-bottom: 16px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  table th {
+    text-align: left;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: #8a8d94;
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  table td {
+    padding: 10px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #f2f2f2;
+  }
+
+  .status-pill {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #fff;
+    display: inline-block;
+  }
+
+  .status-OnTrip { background: #2563eb; }
+  .status-Completed { background: #16a34a; }
+  .status-Dispatched { background: #7c5cff; }
+  .status-Draft { background: #9ca3af; }
+
+  .vehicle-status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    font-size: 0.82rem;
+    color: #4a4d54;
+  }
+
+  .vehicle-status-row span:first-child {
+    width: 80px;
+    flex-shrink: 0;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 8px;
+    background: #f0f0f2;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+  }
+
+  .fill-available { background: #16a34a; }
+  .fill-ontrip { background: #2563eb; }
+  .fill-inshop { background: #d97706; }
+  .fill-retired { background: #dc2626; }
+</style>
+</head>
+<body>
+
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <img src="assets/logotq.png" alt="transiQ">
+      transiQ
+    </div>
+    <ul class="nav-links">
+      <li class="active"><i class="fa-solid fa-gauge"></i> Dashboard</li>
+      <li><i class="fa-solid fa-van-shuttle"></i> Fleet</li>
+      <li><i class="fa-solid fa-id-card"></i> Drivers</li>
+      <li><i class="fa-solid fa-route"></i> Trips</li>
+      <li><i class="fa-solid fa-screwdriver-wrench"></i> Maintenance</li>
+      <li><i class="fa-solid fa-gas-pump"></i> Fuel & Expenses</li>
+      <li><i class="fa-solid fa-chart-line"></i> Analytics</li>
+      <li><i class="fa-solid fa-gear"></i> Settings</li>
+    </ul>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Search...">
+      </div>
+      <div class="user-block">
+        <span class="user-name">user</span>
+        <span class="role-badge">Dispatcher</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="filters">
+        <select><option>Vehicle Type: All</option></select>
+        <select><option>Status: All</option></select>
+        <select><option>Region: All</option></select>
+      </div>
+
+      <div class="kpi-grid" id="kpi-grid"></div>
+
+      <div class="panels">
+        <div class="card-box">
+          <h3>Recent Trips</h3>
+          <table>
+            <thead>
+              <tr><th>Trip</th><th>Vehicle</th><th>Driver</th><th>Status</th><th>ETA</th></tr>
+            </thead>
+            <tbody id="trips-tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="card-box">
+          <h3>Vehicle Status</h3>
+          <div id="vehicle-status"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BACKEND_URL = "http://127.0.0.1:5000";
+
+    const dummyKpis = [
+      { label: "Active Vehicles", value: 53, cls: "" },
+      { label: "Available Vehicles", value: 42, cls: "green" },
+      { label: "Vehicles in Maintenance", value: 5, cls: "orange" },
+      { label: "Active Trips", value: 18, cls: "blue" },
+      { label: "Pending Trips", value: 9, cls: "" },
+      { label: "Drivers on Duty", value: 26, cls: "" },
+      { label: "Fleet Utilization", value: "81%", cls: "green" },
+    ];
+
+    const dummyTrips = [
+      { id: "TR001", vehicle: "VAN-05", driver: "Alex", status: "OnTrip", label: "On Trip", eta: "45 min" },
+      { id: "TR002", vehicle: "TRK-12", driver: "John", status: "Completed", label: "Completed", eta: "—" },
+      { id: "TR003", vehicle: "MINI-08", driver: "Priya", status: "Dispatched", label: "Dispatched", eta: "1h 10m" },
+      { id: "TR004", vehicle: "—", driver: "—", status: "Draft", label: "Draft", eta: "Awaiting vehicle" },
+    ];
+
+    function renderKpis(kpis) {
+      document.getElementById("kpi-grid").innerHTML = kpis.map(k => `
+        <div class="kpi-card ${k.cls}">
+          <div class="kpi-label">${k.label}</div>
+          <div class="kpi-value">${k.value}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderTrips(trips) {
+      document.getElementById("trips-tbody").innerHTML = trips.map(t => `
+        <tr>
+          <td>${t.id}</td><td>${t.vehicle}</td><td>${t.driver}</td>
+          <td><span class="status-pill status-${t.status}">${t.label}</span></td>
+          <td>${t.eta}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderVehicleStatus(rows) {
+      document.getElementById("vehicle-status").innerHTML = rows.map(v => `
+        <div class="vehicle-status-row">
+          <span>${v.label}</span>
+          <div class="bar-track"><div class="bar-fill ${v.cls}" style="width:${v.pct}%"></div></div>
+        </div>
+      `).join("");
+    }
+
+    async function loadDashboard() {
+      const token = localStorage.getItem("token");
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/dashboard/kpis`, { headers });
+        if (!res.ok) throw new Error("KPI fetch failed");
+        const data = await res.json();
+
+        renderKpis([
+          { label: "Active Vehicles", value: data.activeVehicles, cls: "" },
+          { label: "Available Vehicles", value: data.availableVehicles, cls: "green" },
+          { label: "Vehicles in Maintenance", value: data.inMaintenance, cls: "orange" },
+          { label: "Active Trips", value: data.activeTrips, cls: "blue" },
+          { label: "Pending Trips", value: data.pendingTrips, cls: "" },
+          { label: "Drivers on Duty", value: data.driversOnDuty, cls: "" },
+          { label: "Fleet Utilization", value: data.utilization + "%", cls: "green" },
+        ]);
+      } catch (err) {
+        console.error("Backend not reachable, showing dummy KPIs:", err.message);
+        renderKpis(dummyKpis);
+      }
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/trips`, { headers });
+        if (!res.ok) throw new Error("Trips fetch failed");
+        const trips = await res.json();
+        renderTrips(trips.slice(0, 5).map(t => ({
+          id: "TR" + String(t.id).padStart(3, "0"),
+          vehicle: t.vehicleId, driver: t.driverId,
+          status: t.status.replace(/\s+/g, ""), label: t.status,
+          eta: t.status === "Dispatched" ? "In progress" : "—",
+        })));
+      } catch (err) {
+        console.error("Backend not reachable, showing dummy trips:", err.message);
+        renderTrips(dummyTrips);
+      }
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/vehicles`, { headers });
+        if (!res.ok) throw new Error("Vehicles fetch failed");
+        const vehicles = await res.json();
+        const total = vehicles.length || 1;
+        const count = s => vehicles.filter(v => v.status === s).length;
+        renderVehicleStatus([
+          { label: "Available", pct: Math.round((count("Available") / total) * 100), cls: "fill-available" },
+          { label: "On Trip", pct: Math.round((count("On Trip") / total) * 100), cls: "fill-ontrip" },
+          { label: "In Shop", pct: Math.round((count("In Shop") / total) * 100), cls: "fill-inshop" },
+          { label: "Retired", pct: Math.round((count("Retired") / total) * 100), cls: "fill-retired" },
+        ]);
+      } catch (err) {
+        console.error("Backend not reachable, showing dummy vehicle status:", err.message);
+        renderVehicleStatus([
+          { label: "Available", pct: 65, cls: "fill-available" },
+          { label: "On Trip", pct: 30, cls: "fill-ontrip" },
+          { label: "In Shop", pct: 18, cls: "fill-inshop" },
+          { label: "Retired", pct: 5, cls: "fill-retired" },
+        ]);
+      }
+    }
+
+    loadDashboard();
+  </script>
+
+</body>
+</html>
