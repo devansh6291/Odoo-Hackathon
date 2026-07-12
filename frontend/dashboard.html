@@ -330,46 +330,45 @@
     const BACKEND_URL = "http://127.0.0.1:5000";
 
     // ============================================================
-    // ROLE CONFIG — this is the core of the RBAC UI.
-    // Each role gets its own sidebar items, KPI set, and panels.
+    // ROLE CONFIG — Updated with 'href' for each page link
     // ============================================================
     const ROLE_CONFIG = {
       "Fleet Manager": {
         nav: [
-          { icon: "fa-gauge", label: "Dashboard", active: true },
-          { icon: "fa-van-shuttle", label: "Fleet" },
-          { icon: "fa-screwdriver-wrench", label: "Maintenance" },
-          { icon: "fa-gear", label: "Settings" },
+          { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html", active: true },
+          { icon: "fa-van-shuttle", label: "Fleet", href: "vehicles.html" },
+          { icon: "fa-screwdriver-wrench", label: "Maintenance", href: "maintenance.html" },
+          { icon: "fa-gear", label: "Settings", href: "settings.html" },
         ],
         kpis: ["activeVehicles", "availableVehicles", "inMaintenance", "utilization"],
         panels: ["vehicleStatus", "maintenanceAlerts"],
       },
       "Dispatcher": {
         nav: [
-          { icon: "fa-gauge", label: "Dashboard", active: true },
-          { icon: "fa-route", label: "Trips" },
-          { icon: "fa-van-shuttle", label: "Fleet" },
-          { icon: "fa-gear", label: "Settings" },
+          { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html", active: true },
+          { icon: "fa-route", label: "Trips", href: "trips.html" },
+          { icon: "fa-van-shuttle", label: "Fleet", href: "vehicles.html" },
+          { icon: "fa-gear", label: "Settings", href: "settings.html" },
         ],
         kpis: ["activeTrips", "pendingTrips", "availableVehicles", "driversOnDuty"],
         panels: ["recentTrips", "vehicleStatus"],
       },
       "Safety Officer": {
         nav: [
-          { icon: "fa-gauge", label: "Dashboard", active: true },
-          { icon: "fa-id-card", label: "Drivers" },
-          { icon: "fa-shield-halved", label: "Compliance" },
-          { icon: "fa-gear", label: "Settings" },
+          { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html", active: true },
+          { icon: "fa-id-card", label: "Drivers", href: "drivers.html" },
+          { icon: "fa-shield-halved", label: "Compliance", href: "reports.html" },
+          { icon: "fa-gear", label: "Settings", href: "settings.html" },
         ],
         kpis: ["driversOnDuty", "suspendedDrivers", "expiringLicenses", "avgSafetyScore"],
         panels: ["licenseExpiry", "driverStatus"],
       },
       "Financial Analyst": {
         nav: [
-          { icon: "fa-gauge", label: "Dashboard", active: true },
-          { icon: "fa-gas-pump", label: "Fuel & Expenses" },
-          { icon: "fa-chart-line", label: "Analytics" },
-          { icon: "fa-gear", label: "Settings" },
+          { icon: "fa-gauge", label: "Dashboard", href: "dashboard.html", active: true },
+          { icon: "fa-gas-pump", label: "Fuel & Expenses", href: "expenses.html" },
+          { icon: "fa-chart-line", label: "Analytics", href: "reports.html" },
+          { icon: "fa-gear", label: "Settings", href: "settings.html" },
         ],
         kpis: ["operationalCost", "fuelCost", "maintenanceCost", "fleetUtilization"],
         panels: ["costBreakdown", "topExpenseVehicles"],
@@ -467,8 +466,7 @@
     }
 
     // ============================================================
-    // ROLE-SPECIFIC DATA LOADERS — each returns { kpiValues, panelsHtml }
-    // Falls back to dummy data automatically if backend call fails.
+    // ROLE-SPECIFIC DATA LOADERS
     // ============================================================
     async function loadFleetManagerData() {
       let kpiValues = {
@@ -642,7 +640,7 @@
     };
 
     // ============================================================
-    // PANEL HTML BUILDERS (take real or dummy rows, same either way)
+    // PANEL HTML BUILDERS 
     // ============================================================
     function renderRecentTripsPanel(rows) {
       return `
@@ -726,7 +724,7 @@
     }
 
     // ============================================================
-    // MAIN RENDER — reads role from localStorage, loads real data
+    // MAIN RENDER — Updated with onclick for navigation routing
     // ============================================================
     async function renderDashboardForRole() {
       const role = localStorage.getItem("role") || "Dispatcher";
@@ -736,8 +734,11 @@
       document.getElementById("user-name").textContent = name;
       document.getElementById("role-badge").textContent = role;
 
+      // UPDATE: Added onclick attribute to route to the correct html file
       document.getElementById("nav-links").innerHTML = config.nav.map(item => `
-        <li class="${item.active ? "active" : ""}"><i class="fa-solid ${item.icon}"></i> ${item.label}</li>
+        <li class="${item.active ? "active" : ""}" onclick="window.location.href='${item.href}'">
+          <i class="fa-solid ${item.icon}"></i> ${item.label}
+        </li>
       `).join("");
 
       document.getElementById("kpi-grid").innerHTML = config.kpis.map(key => `
